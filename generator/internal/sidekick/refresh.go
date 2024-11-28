@@ -19,7 +19,8 @@ import (
 	"path"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/genclient"
-	"github.com/googleapis/google-cloud-rust/generator/internal/language"
+	"github.com/googleapis/google-cloud-rust/generator/internal/language/golang"
+	"github.com/googleapis/google-cloud-rust/generator/internal/language/rust"
 	"github.com/googleapis/google-cloud-rust/generator/internal/parser/openapi"
 	"github.com/googleapis/google-cloud-rust/generator/internal/parser/protobuf"
 )
@@ -62,11 +63,17 @@ func refresh(rootConfig *Config, cmdLine *CommandLine, output string) error {
 		return fmt.Errorf("unknown parser %q", specFormat)
 	}
 
-	codec, err := language.NewCodec(copts)
-	if err != nil {
-		return err
+	var codec genclient.LanguageCodec
+	switch copts.Language {
+	case "rust":
+		rust.NewCodec(copts)
+	case "go":
+		golang.NewCodec(copts)
+	default:
+		return fmt.Errorf("unknown language: %s", copts.Language)
 	}
-	if err = codec.Validate(api); err != nil {
+
+	if err := codec.Validate(api); err != nil {
 		return err
 	}
 	request := &genclient.GenerateRequest{
