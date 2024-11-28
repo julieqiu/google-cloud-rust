@@ -20,8 +20,8 @@ import (
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/genclient"
 	"github.com/googleapis/google-cloud-rust/generator/internal/golang"
-	"github.com/googleapis/google-cloud-rust/generator/internal/parser/openapi"
-	"github.com/googleapis/google-cloud-rust/generator/internal/parser/protobuf"
+	"github.com/googleapis/google-cloud-rust/generator/internal/openapi"
+	"github.com/googleapis/google-cloud-rust/generator/internal/protobuf"
 	"github.com/googleapis/google-cloud-rust/generator/internal/rust"
 )
 
