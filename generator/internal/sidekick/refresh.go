@@ -19,10 +19,10 @@ import (
 	"path"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/genclient"
-	"github.com/googleapis/google-cloud-rust/generator/internal/language/golang"
-	"github.com/googleapis/google-cloud-rust/generator/internal/language/rust"
+	"github.com/googleapis/google-cloud-rust/generator/internal/golang"
 	"github.com/googleapis/google-cloud-rust/generator/internal/parser/openapi"
 	"github.com/googleapis/google-cloud-rust/generator/internal/parser/protobuf"
+	"github.com/googleapis/google-cloud-rust/generator/internal/rust"
 )
 
 // refresh reruns the generator in one directory, using the configuration
