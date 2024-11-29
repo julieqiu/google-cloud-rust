@@ -30,7 +30,7 @@ const (
 	// projectRoot is the root of the google-cloud-rust. The golden files for
 	// these tests depend on code in ../../auth and ../../src/gax.
 	projectRoot = "../../.."
-	testdataDir = "generator/testdata"
+	testdataDir = "generator/internal/testing/testdata"
 	templateDir = "generator/templates"
 )
 
@@ -97,7 +97,7 @@ func TestRustFromProtobuf(t *testing.T) {
 		},
 		{
 			Source:        "googleapis/google/cloud/secretmanager/v1",
-			ServiceConfig: secretManagerServiceConfig,
+			ServiceConfig: "googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml",
 			Name:          "secretmanager",
 			ExtraOptions: map[string]string{
 				"package:iam":      fmt.Sprintf("package=iam-v1-golden-gclient,path=%s/rust/gclient/golden/iam/v1,source=google.iam.v1", testdataDir),

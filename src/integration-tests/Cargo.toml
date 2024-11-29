@@ -27,10 +27,10 @@ tokio      = { version = "1.12", features = ["full", "macros"], optional = true 
 auth       = { path = "../../auth", package = "google-cloud-auth" }
 gax        = { path = "../../src/gax", package = "gcp-sdk-gax" }
 wkt        = { path = "../../src/wkt", package = "gcp-sdk-wkt" }
-iam_v1     = { path = "../../generator/testdata/rust/gclient/golden/iam/v1", package = "iam-v1-golden-gclient" }
-sm         = { path = "../../generator/testdata/rust/gclient/golden/secretmanager", package = "secretmanager-golden-gclient" }
-loc        = { path = "../../generator/testdata/rust/gclient/golden/location", package = "location-golden-gclient" }
-smo        = { path = "../../generator/testdata/rust/openapi/golden", package = "secretmanager-golden-openapi" }
+iam_v1     = { path = "../../generator/internal/testing/testdata/rust/gclient/golden/iam/v1", package = "iam-v1-golden-gclient" }
+sm         = { path = "../../generator/internal/testing/testdata/rust/gclient/golden/secretmanager", package = "secretmanager-golden-gclient" }
+loc        = { path = "../../generator/internal/testing/testdata/rust/gclient/golden/location", package = "location-golden-gclient" }
+smo        = { path = "../../generator/internal/testing/testdata/rust/openapi/golden", package = "secretmanager-golden-openapi" }
 rand       = "0.8.5"
 futures    = "0.3.31"
 bytes      = "1.8.0"

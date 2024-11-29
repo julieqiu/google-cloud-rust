@@ -13,15 +13,15 @@
 # limitations under the License.
 
 [general]
-language = 'rust'
+language = 'go'
 template-dir = 'generator/templates'
 specification-format = 'protobuf'
-specification-source = 'google/type'
-service-config = 'google/type/type.yaml'
+specification-source = 'generator/internal/testing/testdata/googleapis/google/type'
 
 [source]
-googleapis-root = 'generator/testdata/googleapis'
+googleapis-root = 'generator/internal/testing/testdata/googleapis'
 
 [codec]
 copyright-year = '2024'
-generate-module = 'true'
+go-package-name = 'typez'
+package-name-override = 'github.com/google-cloud-rust/generator/internal/testing/testdata/go/gclient/golden/typez'
