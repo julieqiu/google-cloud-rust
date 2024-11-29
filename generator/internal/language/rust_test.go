@@ -32,9 +32,9 @@ func createRustCodec() *RustCodec {
 	}
 
 	return &RustCodec{
-		ModulePath:    "model",
-		ExtraPackages: []*RustPackage{wkt},
-		PackageMapping: map[string]*RustPackage{
+		modulePath:    "model",
+		extraPackages: []*RustPackage{wkt},
+		packageMapping: map[string]*RustPackage{
 			"google.protobuf": wkt,
 		},
 	}
@@ -58,10 +58,10 @@ func TestRust_ParseOptions(t *testing.T) {
 		Path:    "src/wkt",
 	}
 	want := &RustCodec{
-		PackageNameOverride:      "test-only",
-		ModulePath:               "alternative::generated",
-		DeserializeWithdDefaults: true,
-		ExtraPackages: []*RustPackage{
+		packageNameOverride:      "test-only",
+		modulePath:               "alternative::generated",
+		deserializeWithdDefaults: true,
+		extraPackages: []*RustPackage{
 			gp,
 			{
 				Name:    "gax",
@@ -72,7 +72,7 @@ func TestRust_ParseOptions(t *testing.T) {
 				},
 			},
 		},
-		PackageMapping: map[string]*RustPackage{
+		packageMapping: map[string]*RustPackage{
 			"google.protobuf": gp,
 			"test-only":       gp,
 		},
@@ -80,8 +80,8 @@ func TestRust_ParseOptions(t *testing.T) {
 	if diff := cmp.Diff(want, codec, cmpopts.IgnoreFields(RustCodec{}, "ExtraPackages", "PackageMapping")); diff != "" {
 		t.Errorf("codec mismatch (-want, +got):\n%s", diff)
 	}
-	if want.PackageNameOverride != codec.PackageNameOverride {
-		t.Errorf("mismatched in packageNameOverride, want=%s, got=%s", want.PackageNameOverride, codec.PackageNameOverride)
+	if want.packageNameOverride != codec.packageNameOverride {
+		t.Errorf("mismatched in packageNameOverride, want=%s, got=%s", want.packageNameOverride, codec.packageNameOverride)
 	}
 	checkRustPackages(t, codec, want)
 }
@@ -161,7 +161,7 @@ func rustPackageNameImpl(t *testing.T, want string, opts map[string]string, api 
 func checkRustPackages(t *testing.T, got *RustCodec, want *RustCodec) {
 	t.Helper()
 	less := func(a, b *RustPackage) bool { return a.Name < b.Name }
-	if diff := cmp.Diff(want.ExtraPackages, got.ExtraPackages, cmpopts.SortSlices(less)); diff != "" {
+	if diff := cmp.Diff(want.extraPackages, got.extraPackages, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("package mismatch (-want, +got):\n%s", diff)
 	}
 }
@@ -175,8 +175,8 @@ func TestRust_Validate(t *testing.T) {
 	if err := c.Validate(api); err != nil {
 		t.Errorf("unexpected error in API validation %q", err)
 	}
-	if c.SourceSpecificationPackageName != "p1" {
-		t.Errorf("mismatched source package name, want=p1, got=%s", c.SourceSpecificationPackageName)
+	if c.sourceSpecificationPackageName != "p1" {
+		t.Errorf("mismatched source package name, want=p1, got=%s", c.sourceSpecificationPackageName)
 	}
 }
 
@@ -187,7 +187,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 		[]*api.Service{{Name: "s1", Package: "p1"}})
 	c := &RustCodec{}
 	if err := c.Validate(test); err == nil {
-		t.Errorf("expected an error in API validation got=%s", c.SourceSpecificationPackageName)
+		t.Errorf("expected an error in API validation got=%s", c.sourceSpecificationPackageName)
 	}
 
 	test = newTestAPI(
@@ -196,7 +196,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 		[]*api.Service{{Name: "s1", Package: "p1"}})
 	c = &RustCodec{}
 	if err := c.Validate(test); err == nil {
-		t.Errorf("expected an error in API validation got=%s", c.SourceSpecificationPackageName)
+		t.Errorf("expected an error in API validation got=%s", c.sourceSpecificationPackageName)
 	}
 
 	test = newTestAPI(
@@ -205,7 +205,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 		[]*api.Service{{Name: "s1", Package: "p1"}, {Name: "s2", Package: "p2"}})
 	c = &RustCodec{}
 	if err := c.Validate(test); err == nil {
-		t.Errorf("expected an error in API validation got=%s", c.SourceSpecificationPackageName)
+		t.Errorf("expected an error in API validation got=%s", c.sourceSpecificationPackageName)
 	}
 }
 
