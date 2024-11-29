@@ -24,9 +24,12 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-func NewGoCodec(options map[string]string) (*GoCodec, error) {
-	codec := &GoCodec{
-		ImportMap: map[string]*GoImport{},
+func newGoCodec(a *api.API, options map[string]string) (*goCodec, error) {
+	codec := &goCodec{
+		ImportMap: map[string]*goImport{},
+	}
+	if err := codec.Validate(a); err != nil {
+		return nil, err
 	}
 	for key, definition := range options {
 		switch {
@@ -43,16 +46,17 @@ func NewGoCodec(options map[string]string) (*GoCodec, error) {
 			if len(defs) != 2 {
 				return nil, fmt.Errorf("%s should be in the format path;name, got=%q", definition, keys[1])
 			}
-			codec.ImportMap[keys[1]] = &GoImport{
+			codec.ImportMap[keys[1]] = &goImport{
 				Path: defs[0],
 				Name: defs[1],
 			}
 		}
 	}
+	codec.LoadWellKnownTypes(a.State)
 	return codec, nil
 }
 
-type GoCodec struct {
+type goCodec struct {
 	// The source package name (e.g. google.iam.v1 in Protobuf). The codec can
 	// generate code for one source package at a time.
 	SourceSpecificationPackageName string
@@ -61,15 +65,15 @@ type GoCodec struct {
 	// The package name to generate code into
 	GoPackageName string
 	// A map containing package id to import path information
-	ImportMap map[string]*GoImport
+	ImportMap map[string]*goImport
 }
 
-type GoImport struct {
+type goImport struct {
 	Path string
 	Name string
 }
 
-func (c *GoCodec) LoadWellKnownTypes(s *api.APIState) {
+func (c *goCodec) LoadWellKnownTypes(s *api.APIState) {
 	timestamp := &api.Message{
 		ID:      ".google.protobuf.Timestamp",
 		Name:    "Time",
@@ -84,11 +88,11 @@ func (c *GoCodec) LoadWellKnownTypes(s *api.APIState) {
 	s.MessageByID[duration.ID] = duration
 }
 
-func (*GoCodec) FieldAttributes(*api.Field, *api.APIState) []string {
+func (*goCodec) FieldAttributes(*api.Field, *api.APIState) []string {
 	return []string{}
 }
 
-func (c *GoCodec) FieldType(f *api.Field, state *api.APIState) string {
+func (c *goCodec) FieldType(f *api.Field, state *api.APIState) string {
 	var out string
 	switch f.Typez {
 	case api.STRING_TYPE:
@@ -127,15 +131,15 @@ func (c *GoCodec) FieldType(f *api.Field, state *api.APIState) string {
 	return out
 }
 
-func (c *GoCodec) AsQueryParameter(f *api.Field, state *api.APIState) string {
+func (c *goCodec) AsQueryParameter(f *api.Field, state *api.APIState) string {
 	return fmt.Sprintf("req.%s.to_str()", c.ToCamel(f.Name))
 }
 
-func (c *GoCodec) TemplateDir() string {
+func (c *goCodec) TemplateDir() string {
 	return "go"
 }
 
-func (c *GoCodec) MethodInOutTypeName(id string, s *api.APIState) string {
+func (c *goCodec) MethodInOutTypeName(id string, s *api.APIState) string {
 	if id == "" {
 		return ""
 	}
@@ -147,11 +151,11 @@ func (c *GoCodec) MethodInOutTypeName(id string, s *api.APIState) string {
 	return strcase.ToCamel(m.Name)
 }
 
-func (*GoCodec) MessageAttributes(*api.Message, *api.APIState) []string {
+func (*goCodec) MessageAttributes(*api.Message, *api.APIState) []string {
 	return []string{}
 }
 
-func (c *GoCodec) MessageName(m *api.Message, state *api.APIState) string {
+func (c *goCodec) MessageName(m *api.Message, state *api.APIState) string {
 	if m.Parent != nil {
 		return c.MessageName(m.Parent, state) + "_" + strcase.ToCamel(m.Name)
 	}
@@ -161,37 +165,37 @@ func (c *GoCodec) MessageName(m *api.Message, state *api.APIState) string {
 	return c.ToPascal(m.Name)
 }
 
-func (c *GoCodec) FQMessageName(m *api.Message, state *api.APIState) string {
+func (c *goCodec) FQMessageName(m *api.Message, state *api.APIState) string {
 	return c.MessageName(m, state)
 }
 
-func (c *GoCodec) EnumName(e *api.Enum, state *api.APIState) string {
+func (c *goCodec) EnumName(e *api.Enum, state *api.APIState) string {
 	if e.Parent != nil {
 		return c.MessageName(e.Parent, state) + "_" + strcase.ToCamel(e.Name)
 	}
 	return strcase.ToCamel(e.Name)
 }
 
-func (c *GoCodec) FQEnumName(e *api.Enum, state *api.APIState) string {
+func (c *goCodec) FQEnumName(e *api.Enum, state *api.APIState) string {
 	return c.EnumName(e, state)
 }
 
-func (c *GoCodec) EnumValueName(e *api.EnumValue, state *api.APIState) string {
+func (c *goCodec) EnumValueName(e *api.EnumValue, state *api.APIState) string {
 	if e.Parent.Parent != nil {
 		return c.MessageName(e.Parent.Parent, state) + "_" + strings.ToUpper(e.Name)
 	}
 	return strings.ToUpper(e.Name)
 }
 
-func (c *GoCodec) FQEnumValueName(v *api.EnumValue, state *api.APIState) string {
+func (c *goCodec) FQEnumValueName(v *api.EnumValue, state *api.APIState) string {
 	return c.EnumValueName(v, state)
 }
 
-func (c *GoCodec) OneOfType(o *api.OneOf, _ *api.APIState) string {
+func (c *goCodec) OneOfType(o *api.OneOf, _ *api.APIState) string {
 	panic("not needed for Go")
 }
 
-func (c *GoCodec) BodyAccessor(m *api.Method, state *api.APIState) string {
+func (c *goCodec) BodyAccessor(m *api.Method, state *api.APIState) string {
 	if m.PathInfo.BodyFieldPath == "*" {
 		// no accessor needed, use the whole request
 		return ""
@@ -199,7 +203,7 @@ func (c *GoCodec) BodyAccessor(m *api.Method, state *api.APIState) string {
 	return "." + strcase.ToCamel(m.PathInfo.BodyFieldPath)
 }
 
-func (c *GoCodec) HTTPPathFmt(m *api.PathInfo, state *api.APIState) string {
+func (c *goCodec) HTTPPathFmt(m *api.PathInfo, state *api.APIState) string {
 	fmt := ""
 	for _, segment := range m.PathTemplate {
 		if segment.Literal != nil {
@@ -213,7 +217,7 @@ func (c *GoCodec) HTTPPathFmt(m *api.PathInfo, state *api.APIState) string {
 	return fmt
 }
 
-func (c *GoCodec) HTTPPathArgs(h *api.PathInfo, state *api.APIState) []string {
+func (c *goCodec) HTTPPathArgs(h *api.PathInfo, state *api.APIState) []string {
 	var args []string
 	// TODO(codyoss): https://github.com/googleapis/google-cloud-rust/issues/34
 	for _, segment := range h.PathTemplate {
@@ -225,7 +229,7 @@ func (c *GoCodec) HTTPPathArgs(h *api.PathInfo, state *api.APIState) []string {
 	return args
 }
 
-func (c *GoCodec) QueryParams(m *api.Method, state *api.APIState) []*api.Field {
+func (c *goCodec) QueryParams(m *api.Method, state *api.APIState) []*api.Field {
 	msg, ok := state.MessageByID[m.InputTypeID]
 	if !ok {
 		slog.Error("unable to lookup type", "id", m.InputTypeID)
@@ -242,26 +246,26 @@ func (c *GoCodec) QueryParams(m *api.Method, state *api.APIState) []*api.Field {
 	return queryParams
 }
 
-func (c *GoCodec) ToSnake(symbol string) string {
+func (c *goCodec) ToSnake(symbol string) string {
 	return goEscapeKeyword(c.ToSnakeNoMangling(symbol))
 }
 
-func (*GoCodec) ToSnakeNoMangling(symbol string) string {
+func (*goCodec) ToSnakeNoMangling(symbol string) string {
 	if strings.ToLower(symbol) == symbol {
 		return goEscapeKeyword(symbol)
 	}
 	return goEscapeKeyword(strcase.ToSnake(symbol))
 }
 
-func (*GoCodec) ToPascal(symbol string) string {
+func (*goCodec) ToPascal(symbol string) string {
 	return goEscapeKeyword(strcase.ToCamel(symbol))
 }
 
-func (*GoCodec) ToCamel(symbol string) string {
+func (*goCodec) ToCamel(symbol string) string {
 	return strcase.ToLowerCamel(symbol)
 }
 
-func (*GoCodec) FormatDocComments(documentation string) []string {
+func (*goCodec) FormatDocComments(documentation string) []string {
 	ss := strings.Split(documentation, "\n")
 	for i := range ss {
 		ss[i] = strings.TrimRightFunc(ss[i], unicode.IsSpace)
@@ -269,18 +273,18 @@ func (*GoCodec) FormatDocComments(documentation string) []string {
 	return ss
 }
 
-func (*GoCodec) RequiredPackages() []string {
+func (*goCodec) RequiredPackages() []string {
 	return []string{}
 }
 
-func (c *GoCodec) PackageName(api *api.API) string {
+func (c *goCodec) PackageName(api *api.API) string {
 	if len(c.PackageNameOverride) > 0 {
 		return c.PackageNameOverride
 	}
 	return api.Name
 }
 
-func (c *GoCodec) validatePackageName(newPackage, elementName string) error {
+func (c *goCodec) validatePackageName(newPackage, elementName string) error {
 	if c.SourceSpecificationPackageName == newPackage {
 		return nil
 	}
@@ -297,7 +301,7 @@ func (c *GoCodec) validatePackageName(newPackage, elementName string) error {
 		c.SourceSpecificationPackageName, newPackage, elementName)
 }
 
-func (c *GoCodec) Validate(api *api.API) error {
+func (c *goCodec) Validate(api *api.API) error {
 	// Set the source package. We should always take the first service registered
 	// as the source package. Services with mixes will register those after the
 	// source package.
@@ -324,17 +328,17 @@ func (c *GoCodec) Validate(api *api.API) error {
 	return nil
 }
 
-type GoContext struct {
+type goContext struct {
 	GoPackage string
 }
 
-func (c *GoCodec) AdditionalContext() any {
-	return GoContext{
+func (c *goCodec) AdditionalContext() any {
+	return goContext{
 		GoPackage: c.GoPackageName,
 	}
 }
 
-func (c *GoCodec) Imports() []string {
+func (c *goCodec) Imports() []string {
 	var imports []string
 	for _, imp := range c.ImportMap {
 		imports = append(imports, fmt.Sprintf("%q", imp.Path))

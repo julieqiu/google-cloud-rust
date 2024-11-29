@@ -49,30 +49,17 @@ func refresh(rootConfig *Config, cmdLine *CommandLine, output string) error {
 		return err
 	}
 
-	var codec language.Codec
-	switch config.General.Language {
-	case "rust":
-		codec, err = language.NewRustCodec(output, config.Codec)
-	case "go":
-		codec, err = language.NewGoCodec(config.Codec)
-	default:
-		return fmt.Errorf("unknown language: %s", config.General.Language)
-	}
+	root, context, err := language.NewTemplateData(a, config.Codec, output, config.General.Language, config.General.TemplateDir)
 	if err != nil {
-		return err
-	}
-	if err := codec.Validate(a); err != nil {
 		return err
 	}
 
 	request := &generateClientRequest{
-		API:         a,
-		Codec:       codec,
-		OutDir:      output,
-		TemplateDir: config.General.TemplateDir,
+		API:    a,
+		OutDir: output,
 	}
 	if cmdLine.DryRun {
 		return nil
 	}
-	return generateClient(request)
+	return generateClient(root, request, context)
 }

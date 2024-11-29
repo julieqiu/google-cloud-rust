@@ -24,17 +24,17 @@ import (
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
 )
 
-func createRustCodec() *RustCodec {
-	wkt := &RustPackage{
+func createRustCodec() *rustCodec {
+	wkt := &rustPackage{
 		Name:    "gax_wkt",
 		Package: "types",
 		Path:    "../../types",
 	}
 
-	return &RustCodec{
+	return &rustCodec{
 		ModulePath:    "model",
-		ExtraPackages: []*RustPackage{wkt},
-		PackageMapping: map[string]*RustPackage{
+		ExtraPackages: []*rustPackage{wkt},
+		PackageMapping: map[string]*rustPackage{
 			"google.protobuf": wkt,
 		},
 	}
@@ -48,20 +48,20 @@ func TestRust_ParseOptions(t *testing.T) {
 		"package:wkt":           "package=types,path=src/wkt,source=google.protobuf,source=test-only",
 		"package:gax":           "package=gax,path=src/gax,feature=sdk_client",
 	}
-	codec, err := NewRustCodec("", options)
+	codec, err := createNewRustCodec("", options)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gp := &RustPackage{
+	gp := &rustPackage{
 		Name:    "wkt",
 		Package: "types",
 		Path:    "src/wkt",
 	}
-	want := &RustCodec{
+	want := &rustCodec{
 		PackageNameOverride:      "test-only",
 		ModulePath:               "alternative::generated",
 		DeserializeWithdDefaults: true,
-		ExtraPackages: []*RustPackage{
+		ExtraPackages: []*rustPackage{
 			gp,
 			{
 				Name:    "gax",
@@ -72,12 +72,12 @@ func TestRust_ParseOptions(t *testing.T) {
 				},
 			},
 		},
-		PackageMapping: map[string]*RustPackage{
+		PackageMapping: map[string]*rustPackage{
 			"google.protobuf": gp,
 			"test-only":       gp,
 		},
 	}
-	if diff := cmp.Diff(want, codec, cmpopts.IgnoreFields(RustCodec{}, "ExtraPackages", "PackageMapping")); diff != "" {
+	if diff := cmp.Diff(want, codec, cmpopts.IgnoreFields(rustCodec{}, "ExtraPackages", "PackageMapping")); diff != "" {
 		t.Errorf("codec mismatch (-want, +got):\n%s", diff)
 	}
 	if want.PackageNameOverride != codec.PackageNameOverride {
@@ -93,7 +93,7 @@ func TestRust_RequiredPackages(t *testing.T) {
 		"package:gax":   "package=gax,path=src/gax,version=1.2.3",
 		"package:auth":  "ignore=true",
 	}
-	codec, err := NewRustCodec(outdir, options)
+	codec, err := createNewRustCodec(outdir, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestRust_RequiredPackagesLocal(t *testing.T) {
 	options := map[string]string{
 		"package:gtype": "package=types,path=src/generated/type,source=google.type,source=test-only",
 	}
-	codec, err := NewRustCodec("", options)
+	codec, err := createNewRustCodec("", options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestRust_PackageName(t *testing.T) {
 
 func rustPackageNameImpl(t *testing.T, want string, opts map[string]string, api *api.API) {
 	t.Helper()
-	codec, err := NewRustCodec("", opts)
+	codec, err := createNewRustCodec("", opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,12 +155,11 @@ func rustPackageNameImpl(t *testing.T, want string, opts map[string]string, api 
 	if want != got {
 		t.Errorf("mismatch in package name, want=%s, got=%s", want, got)
 	}
-
 }
 
-func checkRustPackages(t *testing.T, got *RustCodec, want *RustCodec) {
+func checkRustPackages(t *testing.T, got *rustCodec, want *rustCodec) {
 	t.Helper()
-	less := func(a, b *RustPackage) bool { return a.Name < b.Name }
+	less := func(a, b *rustPackage) bool { return a.Name < b.Name }
 	if diff := cmp.Diff(want.ExtraPackages, got.ExtraPackages, cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("package mismatch (-want, +got):\n%s", diff)
 	}
@@ -171,7 +170,7 @@ func TestRust_Validate(t *testing.T) {
 		[]*api.Message{{Name: "m1", Package: "p1"}},
 		[]*api.Enum{{Name: "e1", Package: "p1"}},
 		[]*api.Service{{Name: "s1", Package: "p1"}})
-	c := &RustCodec{}
+	c := &rustCodec{}
 	if err := c.Validate(api); err != nil {
 		t.Errorf("unexpected error in API validation %q", err)
 	}
@@ -185,7 +184,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 		[]*api.Message{{Name: "m1", Package: "p1"}, {Name: "m2", Package: "p2"}},
 		[]*api.Enum{{Name: "e1", Package: "p1"}},
 		[]*api.Service{{Name: "s1", Package: "p1"}})
-	c := &RustCodec{}
+	c := &rustCodec{}
 	if err := c.Validate(test); err == nil {
 		t.Errorf("expected an error in API validation got=%s", c.SourceSpecificationPackageName)
 	}
@@ -194,7 +193,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 		[]*api.Message{{Name: "m1", Package: "p1"}},
 		[]*api.Enum{{Name: "e1", Package: "p1"}, {Name: "e2", Package: "p2"}},
 		[]*api.Service{{Name: "s1", Package: "p1"}})
-	c = &RustCodec{}
+	c = &rustCodec{}
 	if err := c.Validate(test); err == nil {
 		t.Errorf("expected an error in API validation got=%s", c.SourceSpecificationPackageName)
 	}
@@ -203,7 +202,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 		[]*api.Message{{Name: "m1", Package: "p1"}},
 		[]*api.Enum{{Name: "e1", Package: "p1"}},
 		[]*api.Service{{Name: "s1", Package: "p1"}, {Name: "s2", Package: "p2"}})
-	c = &RustCodec{}
+	c = &rustCodec{}
 	if err := c.Validate(test); err == nil {
 		t.Errorf("expected an error in API validation got=%s", c.SourceSpecificationPackageName)
 	}
@@ -211,7 +210,7 @@ func TestRust_ValidateMessageMismatch(t *testing.T) {
 
 func TestWellKnownTypesExist(t *testing.T) {
 	api := newTestAPI([]*api.Message{}, []*api.Enum{}, []*api.Service{})
-	c := &RustCodec{}
+	c := &rustCodec{}
 	c.LoadWellKnownTypes(api.State)
 	for _, name := range []string{"Any", "Duration", "Empty", "FieldMask", "Timestamp"} {
 		if _, ok := api.State.MessageByID[fmt.Sprintf(".google.protobuf.%s", name)]; !ok {
@@ -831,7 +830,7 @@ type rustCaseConvertTest struct {
 }
 
 func TestRust_ToSnake(t *testing.T) {
-	c := &RustCodec{}
+	c := &rustCodec{}
 	var snakeConvertTests = []rustCaseConvertTest{
 		{"FooBar", "foo_bar"},
 		{"foo_bar", "foo_bar"},
@@ -851,7 +850,7 @@ func TestRust_ToSnake(t *testing.T) {
 }
 
 func TestRust_ToPascal(t *testing.T) {
-	c := &RustCodec{}
+	c := &rustCodec{}
 	var pascalConvertTests = []rustCaseConvertTest{
 		{"foo_bar", "FooBar"},
 		{"FooBar", "FooBar"},
@@ -906,7 +905,7 @@ Maybe they wanted to show some JSON:
 		"/// ```",
 	}
 
-	c := &RustCodec{}
+	c := &rustCodec{}
 	got := c.FormatDocComments(input)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("mismatch in FormatDocComments (-want, +got)\n:%s", diff)

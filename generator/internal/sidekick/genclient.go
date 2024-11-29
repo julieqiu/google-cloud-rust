@@ -23,19 +23,14 @@ import (
 
 	"github.com/cbroglie/mustache"
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
-	"github.com/googleapis/google-cloud-rust/generator/internal/language"
 )
 
 // generateClientRequest used to generate clients.
 type generateClientRequest struct {
 	// The in memory representation of a parsed input.
 	API *api.API
-	// An adapter to transform values into language idiomatic representations.
-	Codec language.Codec
 	// OutDir is the path to the output directory.
 	OutDir string
-	// Template directory
-	TemplateDir string
 }
 
 func (r *generateClientRequest) outDir() string {
@@ -48,9 +43,7 @@ func (r *generateClientRequest) outDir() string {
 
 // generateClient takes some state and applies it to a template to create a client
 // library.
-func generateClient(req *generateClientRequest) error {
-	data := language.NewTemplateData(req.API, req.Codec)
-	root := filepath.Join(req.TemplateDir, req.Codec.TemplateDir())
+func generateClient(root string, req *generateClientRequest, context []any) error {
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -66,11 +59,6 @@ func generateClient(req *generateClientRequest) error {
 		if strings.Count(d.Name(), ".") == 1 {
 			// skipping partials
 			return nil
-		}
-		var context []any
-		context = append(context, data)
-		if req.Codec.AdditionalContext() != nil {
-			context = append(context, req.Codec.AdditionalContext())
 		}
 		s, err := mustache.RenderFile(path, context...)
 		if err != nil {

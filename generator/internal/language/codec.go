@@ -16,11 +16,11 @@ package language
 
 import "github.com/googleapis/google-cloud-rust/generator/internal/api"
 
-// Codec defines the behavior required to support language-specific
+// codec defines the behavior required to support language-specific
 // customization for template generation. This interface provides methods
 // for rendering field types, formatting comments, handling well-known types,
 // and more. It is designed to be implemented by specific language codecs.
-type Codec interface {
+type codec interface {
 	// TemplateDir returns the directory path containing the templates.
 	TemplateDir() string
 
