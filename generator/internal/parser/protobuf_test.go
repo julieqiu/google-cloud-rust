@@ -19,7 +19,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
-	"github.com/googleapis/google-cloud-rust/generator/internal/genclient"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/apipb"
@@ -1000,14 +999,11 @@ func TestProtobuf_OperationMixin(t *testing.T) {
 
 func newTestCodeGeneratorRequest(t *testing.T, filename string) *pluginpb.CodeGeneratorRequest {
 	t.Helper()
-	popts := genclient.ParserOptions{
-		Source: filename,
-		Options: map[string]string{
-			"googleapis-root": "../../testdata/googleapis",
-			"test-root":       "testdata",
-		},
+	options := map[string]string{
+		"googleapis-root": "../../testdata/googleapis",
+		"test-root":       "testdata",
 	}
-	request, err := newCodeGeneratorRequest(popts)
+	request, err := newCodeGeneratorRequest(filename, options)
 	if err != nil {
 		t.Fatal(err)
 	}

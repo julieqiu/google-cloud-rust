@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
-	"github.com/googleapis/google-cloud-rust/generator/internal/genclient"
 	"google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -34,14 +33,14 @@ import (
 
 // ParserProtobuf reads Protobuf specifications and converts them into
 // the `api.API` model.
-func ParseProtobuf(opts genclient.ParserOptions) (*api.API, error) {
-	request, err := newCodeGeneratorRequest(opts)
+func ParseProtobuf(source, serviceConfigFile string, options map[string]string) (*api.API, error) {
+	request, err := newCodeGeneratorRequest(source, options)
 	if err != nil {
 		return nil, err
 	}
 	var serviceConfig *serviceconfig.Service
-	if opts.ServiceConfig != "" {
-		cfg, err := genclient.ReadServiceConfig(genclient.FindServiceConfigPath(opts))
+	if serviceConfigFile != "" {
+		cfg, err := readServiceConfig(findServiceConfigPath(serviceConfigFile, options))
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +49,7 @@ func ParseProtobuf(opts genclient.ParserOptions) (*api.API, error) {
 	return makeAPIForProtobuf(serviceConfig, request), nil
 }
 
-func newCodeGeneratorRequest(opts genclient.ParserOptions) (_ *pluginpb.CodeGeneratorRequest, err error) {
+func newCodeGeneratorRequest(source string, options map[string]string) (_ *pluginpb.CodeGeneratorRequest, err error) {
 	// Create a temporary files to store `protoc`'s output
 	tempFile, err := os.CreateTemp("", "protoc-out-")
 	if err != nil {
@@ -63,13 +62,13 @@ func newCodeGeneratorRequest(opts genclient.ParserOptions) (_ *pluginpb.CodeGene
 		}
 	}()
 
-	files, err := determineInputFiles(opts)
+	files, err := determineInputFiles(source, options)
 	if err != nil {
 		return nil, err
 	}
 
 	// Call protoc with the given arguments.
-	contents, err := protoc(tempFile.Name(), files, opts)
+	contents, err := protoc(tempFile.Name(), files, options)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +98,7 @@ func newCodeGeneratorRequest(opts genclient.ParserOptions) (_ *pluginpb.CodeGene
 	return request, nil
 }
 
-func protoc(tempFile string, files []string, opts genclient.ParserOptions) ([]byte, error) {
+func protoc(tempFile string, files []string, options map[string]string) ([]byte, error) {
 	args := []string{
 		"--include_imports",
 		"--include_source_info",
@@ -107,7 +106,7 @@ func protoc(tempFile string, files []string, opts genclient.ParserOptions) ([]by
 		"--descriptor_set_out", tempFile,
 	}
 	for _, name := range []string{"test-root", "googleapis-root"} {
-		if path, ok := opts.Options[name]; ok {
+		if path, ok := options[name]; ok {
 			args = append(args, "--proto_path")
 			args = append(args, path)
 		}
@@ -126,28 +125,27 @@ func protoc(tempFile string, files []string, opts genclient.ParserOptions) ([]by
 	return os.ReadFile(tempFile)
 }
 
-func determineInputFiles(config genclient.ParserOptions) ([]string, error) {
+func determineInputFiles(source string, options map[string]string) ([]string, error) {
 	// `config.Source` is relative to the `googleapis-root` (or `test-root`) if
 	// that is set. When it is a single file, this is easy, just return the
 	// filename and `protoc` will find it.
 
-	if strings.HasSuffix(config.Source, ".proto") {
+	if strings.HasSuffix(source, ".proto") {
 		// If the source ends in `.proto` assume it is a single file and let
 		// protoc find it.
-		return []string{config.Source}, nil
+		return []string{source}, nil
 	}
 
-	source := config.Source
 	for _, opt := range []string{"test-root", "googleapis-root"} {
-		location, ok := config.Options[opt]
+		location, ok := options[opt]
 		if !ok {
 			// Ignore options that are not set
 			continue
 		}
-		stat, err := os.Stat(path.Join(location, config.Source))
+		stat, err := os.Stat(path.Join(location, source))
 		if err == nil && stat.IsDir() {
 			// Found a matching directory, use it.
-			source = path.Join(location, config.Source)
+			source = path.Join(location, source)
 			break
 		}
 	}
