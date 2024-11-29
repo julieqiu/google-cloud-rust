@@ -27,7 +27,7 @@ import (
 // the [templateData.Services] method. templateData uses the raw input of the
 // [API] and uses a [lang.Codec] to transform the input into language
 // idiomatic representations.
-func NewTemplateData(model *api.API, codec api.LanguageCodec) *TemplateData {
+func NewTemplateData(model *api.API, codec Codec) *TemplateData {
 	codec.LoadWellKnownTypes(model.State)
 	return &TemplateData{
 		s: model,
@@ -37,7 +37,7 @@ func NewTemplateData(model *api.API, codec api.LanguageCodec) *TemplateData {
 
 type TemplateData struct {
 	s *api.API
-	c api.LanguageCodec
+	c Codec
 }
 
 func (t *TemplateData) Name() string {
@@ -117,7 +117,7 @@ func (t *TemplateData) NameToLower() string {
 // service represents a service in an API.
 type service struct {
 	s     *api.Service
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
@@ -166,7 +166,7 @@ func (s *service) DefaultHost() string {
 // method defines a RPC belonging to a Service.
 type method struct {
 	s     *api.Method
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
@@ -233,7 +233,7 @@ func (m *method) BodyAccessor() string {
 // message defines a message used in request or response handling.
 type message struct {
 	s     *api.Message
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
@@ -334,7 +334,7 @@ func (m *message) IsMap() bool {
 
 type enum struct {
 	s     *api.Enum
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
@@ -364,7 +364,7 @@ func (e *enum) Values() []*enumValue {
 type enumValue struct {
 	s     *api.EnumValue
 	e     *api.Enum
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
@@ -387,7 +387,7 @@ func (e *enumValue) EnumType() string {
 // field defines a field in a Message.
 type field struct {
 	s     *api.Field
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
@@ -431,7 +431,7 @@ func (f *field) AsQueryParameter() string {
 
 type oneOf struct {
 	s     *api.OneOf
-	c     api.LanguageCodec
+	c     Codec
 	state *api.APIState
 }
 
