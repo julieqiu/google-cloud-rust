@@ -5,43 +5,43 @@ and maintaining SDKs for Google Cloud.
 
 ## Example Run with Protobuf
 
-You wneed to have `protoc` installed in your path. You can find useful links
+You need to have `protoc` installed in your path. You can find useful links
 below.
 
 This will generate the client library for [Secret Manager] in the
-`generator/testdata/rust/openapi/golden` directory. In future releases most
+`generator/internal/testing/testdata/rust/openapi/golden` directory. In future releases most
 options should be already configured in a `.sidekick.toml` file.
 
 ```bash
 cd generator
 go run github.com/googleapis/google-cloud-rust/generator/sidekick@latest -project-root=.. generate \
   -specification-format protobuf \
-  -specification-source generator/testdata/googleapis/google/cloud/secretmanager/v1 \
-  -service-config generator/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml \
-  -parser-option googleapis-root=generator/testdata/googleapis \
+  -specification-source generator/internal/testing/testdata/googleapis/google/cloud/secretmanager/v1 \
+  -service-config generator/internal/testing/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml \
+  -parser-option googleapis-root=generator/internal/testing/testdata/googleapis \
   -language rust \
-  -output generator/testdata/rust/gclient/golden/secretmanager \
+  -output generator/internal/testing/testdata/rust/gclient/golden/secretmanager \
   -template-dir generator/templates \
   -codec-option package-name-override=secretmanager-golden-gclient \
   -codec-option package:wkt=package=types,path=types,source=google.protobuf \
   -codec-option package:gax=package=gax,path=gax,feature=sdk_client \
-  -codec-option package:iam=package=iam-v1-golden-gclient,path=generator/testdata/rust/gclient/golden/iam/v1,source=google.iam.v1
+  -codec-option package:iam=package=iam-v1-golden-gclient,path=generator/internal/testing/testdata/rust/gclient/golden/iam/v1,source=google.iam.v1
 ```
 
 ## Example Run with OpenAPI
 
 This will generate the client library for [Secret Manager] in the
-`generator/testdata/rust/openapi/golden` directory. In future releases most
+`generator/internal/testing/testdata/rust/openapi/golden` directory. In future releases most
 options should be already configured in a `.sidekick.toml` file.
 
 ```bash
 cd generator
 go run github.com/googleapis/google-cloud-rust/generator/sidekick@latest -project-root=.. generate \
   -specification-format openapi \
-  -specification-source generator/testdata/openapi/secretmanager_openapi_v1.json \
-  -service-config generator/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml \
+  -specification-source generator/internal/testing/testdata/openapi/secretmanager_openapi_v1.json \
+  -service-config generator/internal/testing/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml \
   -language rust \
-  -output generator/testdata/rust/openapi/golden \
+  -output generator/internal/testing/testdata/rust/openapi/golden \
   -template-dir generator/templates \
   -codec-option package-name-override=secretmanager-golden-openapi \
   -codec-option package:wkt=package=types,path=types,source=google.protobuf \

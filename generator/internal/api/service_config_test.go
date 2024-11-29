@@ -19,14 +19,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/googleapis/google-cloud-rust/generator/internal/sample"
+	"github.com/googleapis/google-cloud-rust/generator/internal/testing/sample"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/apipb"
 )
 
 func TestReadServiceConfig(t *testing.T) {
-	const serviceConfigPath = "../../testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml"
+	const serviceConfigPath = "../testing/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml"
 	got, err := readServiceConfig(serviceConfigPath)
 	if err != nil {
 		t.Fatal(err)
