@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
+	"github.com/googleapis/google-cloud-rust/generator/internal/language"
 	"github.com/iancoleman/strcase"
 )
 
@@ -117,7 +118,7 @@ type EnumValue struct {
 // Fields and methods defined in this struct directly correspond to Mustache
 // tags. For example, the Mustache tag {{#Services}} uses the
 // [Template.Services] field.
-func newTemplateData(model *api.API, c api.LanguageCodec) *TemplateData {
+func newTemplateData(model *api.API, c language.Codec) *TemplateData {
 	c.LoadWellKnownTypes(model.State)
 	return &TemplateData{
 		TemplateDir:      c.TemplateDir(),
@@ -144,7 +145,7 @@ func newTemplateData(model *api.API, c api.LanguageCodec) *TemplateData {
 	}
 }
 
-func newService(s *api.Service, c api.LanguageCodec, state *api.APIState) *Service {
+func newService(s *api.Service, c language.Codec, state *api.APIState) *Service {
 	return &Service{
 		Methods: mapSlice(s.Methods, func(m *api.Method) *Method {
 			return newMethod(m, c, state)
@@ -159,7 +160,7 @@ func newService(s *api.Service, c api.LanguageCodec, state *api.APIState) *Servi
 	}
 }
 
-func newMessage(m *api.Message, c api.LanguageCodec, state *api.APIState) *Message {
+func newMessage(m *api.Message, c language.Codec, state *api.APIState) *Message {
 	return &Message{
 		Fields: mapSlice(m.Fields, func(s *api.Field) *Field {
 			return newField(s, c, state)
@@ -201,7 +202,7 @@ func newMessage(m *api.Message, c api.LanguageCodec, state *api.APIState) *Messa
 	}
 }
 
-func newMethod(m *api.Method, c api.LanguageCodec, state *api.APIState) *Method {
+func newMethod(m *api.Method, c language.Codec, state *api.APIState) *Method {
 	return &Method{
 		BodyAccessor:      c.BodyAccessor(m, state),
 		DocLines:          c.FormatDocComments(m.Documentation),
@@ -219,6 +220,148 @@ func newMethod(m *api.Method, c api.LanguageCodec, state *api.APIState) *Method 
 			return newField(s, c, state)
 		}),
 	}
+	return false
+}
+
+func (m *message) DocLines() []string {
+	return m.c.FormatDocComments(m.s.Documentation)
+}
+
+func (m *message) IsMap() bool {
+	return m.s.IsMap
+}
+
+type enum struct {
+	s     *api.Enum
+	c     language.Codec
+	state *api.APIState
+}
+
+func (e *enum) Name() string {
+	return e.c.EnumName(e.s, e.state)
+}
+
+func (e *enum) NameSnakeCase() string {
+	return e.c.ToSnake(e.c.EnumName(e.s, e.state))
+}
+
+func (e *enum) DocLines() []string {
+	return e.c.FormatDocComments(e.s.Documentation)
+}
+
+func (e *enum) Values() []*enumValue {
+	return mapSlice(e.s.Values, func(s *api.EnumValue) *enumValue {
+		return &enumValue{
+			s:     s,
+			e:     e.s,
+			c:     e.c,
+			state: e.state,
+		}
+	})
+}
+
+type enumValue struct {
+	s     *api.EnumValue
+	e     *api.Enum
+	c     language.Codec
+	state *api.APIState
+}
+
+func (e *enumValue) DocLines() []string {
+	return e.c.FormatDocComments(e.s.Documentation)
+}
+
+func (e *enumValue) Name() string {
+	return e.c.EnumValueName(e.s, e.state)
+}
+
+func (e *enumValue) Number() int32 {
+	return e.s.Number
+}
+
+func (e *enumValue) EnumType() string {
+	return e.c.EnumName(e.e, e.state)
+}
+
+// field defines a field in a Message.
+type field struct {
+	s     *api.Field
+	c     language.Codec
+	state *api.APIState
+}
+
+// NameToSnake converts a Name to snake_case.
+func (f *field) NameToSnake() string {
+	return f.c.ToSnake(f.s.Name)
+}
+
+func (f *field) NameToSnakeNoMangling() string {
+	return f.c.ToSnakeNoMangling(f.s.Name)
+}
+
+// NameToCamel converts a Name to camelCase.
+func (f *field) NameToCamel() string {
+	return f.c.ToCamel(f.s.Name)
+}
+
+func (f *field) NameToPascal() string {
+	return f.c.ToPascal(f.s.Name)
+}
+
+func (f *field) DocLines() []string {
+	return f.c.FormatDocComments(f.s.Documentation)
+}
+
+func (f *field) FieldAttributes() []string {
+	return f.c.FieldAttributes(f.s, f.state)
+}
+
+func (f *field) FieldType() string {
+	return f.c.FieldType(f.s, f.state)
+}
+
+func (f *field) JSONName() string {
+	return f.s.JSONName
+}
+
+func (f *field) AsQueryParameter() string {
+	return f.c.AsQueryParameter(f.s, f.state)
+}
+
+type oneOf struct {
+	s     *api.OneOf
+	c     language.Codec
+	state *api.APIState
+}
+
+func (o *oneOf) NameToPascal() string {
+	return o.c.ToPascal(o.s.Name)
+}
+
+func (o *oneOf) NameToSnake() string {
+	return o.c.ToSnake(o.s.Name)
+}
+
+func (o *oneOf) NameToSnakeNoMangling() string {
+	return o.c.ToSnakeNoMangling(o.s.Name)
+}
+
+func (o *oneOf) FieldType() string {
+	return o.c.OneOfType(o.s, o.state)
+}
+
+func (o *oneOf) DocLines() []string {
+	return o.c.FormatDocComments(o.s.Documentation)
+}
+
+func (o *oneOf) Fields() []*field {
+	return mapSlice(o.s.Fields, func(s *api.Field) *field {
+		return &field{
+			s:     s,
+			c:     o.c,
+			state: o.state,
+		}
+	})
 }
 
 func filterSlice[T any](slice []T, predicate func(T) bool) []T {
@@ -238,7 +381,7 @@ func mapSlice[T, R any](s []T, f func(T) R) []R {
 	return r
 }
 
-func newOneOf(oneOf *api.OneOf, c api.LanguageCodec, state *api.APIState) *OneOf {
+func newOneOf(oneOf *api.OneOf, c language.Codec, state *api.APIState) *OneOf {
 	return &OneOf{
 		NameToPascal:          c.ToPascal(oneOf.Name),
 		NameToSnake:           c.ToSnake(oneOf.Name),
@@ -252,7 +395,7 @@ func newOneOf(oneOf *api.OneOf, c api.LanguageCodec, state *api.APIState) *OneOf
 }
 
 // Constructor function for c.Field
-func newField(field *api.Field, c api.LanguageCodec, state *api.APIState) *Field {
+func newField(field *api.Field, c language.Codec, state *api.APIState) *Field {
 	return &Field{
 		NameToSnake:           c.ToSnake(field.Name),
 		NameToSnakeNoMangling: c.ToSnakeNoMangling(field.Name),
@@ -266,7 +409,7 @@ func newField(field *api.Field, c api.LanguageCodec, state *api.APIState) *Field
 	}
 }
 
-func newEnum(e *api.Enum, c api.LanguageCodec, state *api.APIState) *Enum {
+func newEnum(e *api.Enum, c language.Codec, state *api.APIState) *Enum {
 	return &Enum{
 		Name:          c.EnumName(e, state),
 		NameSnakeCase: c.ToSnake(c.EnumName(e, state)),
@@ -278,7 +421,7 @@ func newEnum(e *api.Enum, c api.LanguageCodec, state *api.APIState) *Enum {
 }
 
 // Constructor function for c.EnumValue
-func newEnumValue(ev *api.EnumValue, e *api.Enum, c api.LanguageCodec, state *api.APIState) *EnumValue {
+func newEnumValue(ev *api.EnumValue, e *api.Enum, c language.Codec, state *api.APIState) *EnumValue {
 	return &EnumValue{
 		DocLines: c.FormatDocComments(ev.Documentation),
 		Name:     c.EnumValueName(ev, state),
