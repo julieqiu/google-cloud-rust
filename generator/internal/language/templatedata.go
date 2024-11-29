@@ -15,7 +15,9 @@
 package language
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
 	"github.com/iancoleman/strcase"
@@ -65,7 +67,8 @@ func (t *TemplateData) HasServices() bool {
 }
 
 func (t *TemplateData) CopyrightYear() string {
-	return t.c.CopyrightYear()
+	year, _, _ := time.Now().Date()
+	return fmt.Sprintf("%04d", year)
 }
 
 func (*TemplateData) BoilerPlate() []string {
