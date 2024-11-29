@@ -37,15 +37,11 @@ func FromOpenAPI(source, serviceConfigFile string, options map[string]string) (*
 	if err != nil {
 		return nil, err
 	}
-	var serviceConfig *serviceconfig.Service
-	if serviceConfigFile != "" {
-		cfg, err := readServiceConfig(findServiceConfigPath(serviceConfigFile, options))
-		if err != nil {
-			return nil, err
-		}
-		serviceConfig = cfg
+	sc, err := fetchServiceConfig(serviceConfigFile, options)
+	if err != nil {
+		return nil, err
 	}
-	return makeAPIForOpenAPI(serviceConfig, model)
+	return makeAPIForOpenAPI(sc, model)
 }
 
 func createDocModel(contents []byte) (*libopenapi.DocumentModel[v3.Document], error) {
