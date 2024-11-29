@@ -30,16 +30,16 @@ const (
 	// projectRoot is the root of the google-cloud-rust. The golden files for
 	// these tests depend on code in ../../auth and ../../src/gax.
 	projectRoot = "../../.."
-	testdataDir = "generator/testdata"
 	templateDir = "generator/templates"
+	testdataDir = "generator/testdata"
 )
 
 var (
 	googleapisRoot             = fmt.Sprintf("%s/googleapis", testdataDir)
-	testdataImportPath         = fmt.Sprintf("github.com/google-cloud-rust/%s", testdataDir)
 	outputDir                  = fmt.Sprintf("%s/test-only", testdataDir)
+	secretManagerServiceConfig = "googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml"
 	specificationSource        = fmt.Sprintf("%s/openapi/secretmanager_openapi_v1.json", testdataDir)
-	secretManagerServiceConfig = fmt.Sprintf("%s/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml", testdataDir)
+	testdataImportPath         = fmt.Sprintf("github.com/google-cloud-rust/%s", testdataDir)
 )
 
 func TestRustFromOpenAPI(t *testing.T) {
@@ -49,7 +49,7 @@ func TestRustFromOpenAPI(t *testing.T) {
 		ProjectRoot:         projectRoot,
 		SpecificationFormat: "openapi",
 		SpecificationSource: specificationSource,
-		ServiceConfig:       secretManagerServiceConfig,
+		ServiceConfig:       fmt.Sprintf("%s/%s", testdataDir, secretManagerServiceConfig),
 		Language:            "rust",
 		Output:              outDir,
 		TemplateDir:         templateDir,
@@ -210,14 +210,14 @@ func TestGoFromProtobuf(t *testing.T) {
 	}
 	configs := []TestConfig{
 		{
-			Source: fmt.Sprintf("%s/googleapis/google/type", testdataDir),
+			Source: fmt.Sprintf("%s/google/type", googleapisRoot),
 			Name:   "typez",
 			ExtraOptions: map[string]string{
 				"go-package-name": "typez",
 			},
 		},
 		{
-			Source: fmt.Sprintf("%s/googleapis/google/iam/v1", testdataDir),
+			Source: fmt.Sprintf("%s/google/iam/v1", googleapisRoot),
 			Name:   "iam/v1",
 			ExtraOptions: map[string]string{
 				"import-mapping:google.type":     fmt.Sprintf("%s/go/gclient/golden/typez;typez", testdataImportPath),
