@@ -37,15 +37,11 @@ func FromProtobuf(source, serviceConfigFile string, options map[string]string) (
 	if err != nil {
 		return nil, err
 	}
-	var serviceConfig *serviceconfig.Service
-	if serviceConfigFile != "" {
-		cfg, err := readServiceConfig(findServiceConfigPath(serviceConfigFile, options))
-		if err != nil {
-			return nil, err
-		}
-		serviceConfig = cfg
+	sc, err := fetchServiceConfig(serviceConfigFile, options)
+	if err != nil {
+		return nil, err
 	}
-	return makeAPIForProtobuf(serviceConfig, request), nil
+	return makeAPIForProtobuf(sc, request), nil
 }
 
 func newCodeGeneratorRequest(source string, options map[string]string) (_ *pluginpb.CodeGeneratorRequest, err error) {

@@ -24,6 +24,17 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+func fetchServiceConfig(serviceConfigFile string, options map[string]string) (*serviceconfig.Service, error) {
+	if serviceConfigFile == "" {
+		return nil, nil
+	}
+	cfg, err := readServiceConfig(findServiceConfigPath(serviceConfigFile, options))
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
 func readServiceConfig(serviceConfigPath string) (*serviceconfig.Service, error) {
 	y, err := os.ReadFile(serviceConfigPath)
 	if err != nil {
