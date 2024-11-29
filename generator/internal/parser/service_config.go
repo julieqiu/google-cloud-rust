@@ -20,7 +20,6 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
-	"github.com/googleapis/google-cloud-rust/generator/internal/genclient"
 	"google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -54,7 +53,7 @@ func readServiceConfig(serviceConfigPath string) (*serviceconfig.Service, error)
 // The service config files are specified as relative to the `googleapis-root`
 // path (or `test-root` when set). This finds the right path given a
 // configuration
-func findServiceConfigPath(config genclient.ParserOptions) string {
+func findServiceConfigPath(config ParserOptions) string {
 	for _, opt := range []string{"test-root", "googleapis-root"} {
 		dir, ok := config.Options[opt]
 		if !ok {
