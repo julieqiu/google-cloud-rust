@@ -129,7 +129,7 @@ func (c *Client) IAMPolicy() *IAMPolicy {
 // existing policy.
 //
 // Can return `NOT_FOUND`, `INVALID_ARGUMENT`, and `PERMISSION_DENIED` errors.
-func (s *IAMPolicy) SetIamPolicy(ctx context.Context, req *SetIamPolicyRequest) (*Policy, error) {
+func (s *IAMPolicy) setIamPolicy(ctx context.Context, req *SetIamPolicyRequest) (*Policy, error) {
 	out := new(Policy)
 	reqBody, err := json.Marshal(req)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *IAMPolicy) SetIamPolicy(ctx context.Context, req *SetIamPolicyRequest) 
 // Gets the access control policy for a resource.
 // Returns an empty policy if the resource exists and does not have a policy
 // set.
-func (s *IAMPolicy) GetIamPolicy(ctx context.Context, req *GetIamPolicyRequest) (*Policy, error) {
+func (s *IAMPolicy) getIamPolicy(ctx context.Context, req *GetIamPolicyRequest) (*Policy, error) {
 	out := new(Policy)
 	reqBody, err := json.Marshal(req)
 	if err != nil {
@@ -201,7 +201,7 @@ func (s *IAMPolicy) GetIamPolicy(ctx context.Context, req *GetIamPolicyRequest) 
 // Note: This operation is designed to be used for building permission-aware
 // UIs and command-line tools, not for authorization checking. This operation
 // may "fail open" without warning.
-func (s *IAMPolicy) TestIamPermissions(ctx context.Context, req *TestIamPermissionsRequest) (*TestIamPermissionsResponse, error) {
+func (s *IAMPolicy) testIamPermissions(ctx context.Context, req *TestIamPermissionsRequest) (*TestIamPermissionsResponse, error) {
 	out := new(TestIamPermissionsResponse)
 	reqBody, err := json.Marshal(req)
 	if err != nil {

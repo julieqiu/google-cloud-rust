@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/longrunning v0.6.2
 	github.com/cbroglie/mustache v1.4.0
+	github.com/ettle/strcase v0.2.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.6.0
 	github.com/iancoleman/strcase v0.3.0

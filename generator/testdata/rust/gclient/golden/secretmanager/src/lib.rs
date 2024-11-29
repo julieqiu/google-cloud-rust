@@ -72,6 +72,7 @@ impl ConfigBuilder {
 #[allow(dead_code)]
 struct NoBody {}
 
+
 /// Secret Manager Service
 ///
 /// Manages secrets and operations using those secrets. Implements a REST
@@ -103,138 +104,107 @@ impl SecretManagerServiceClient {
     }
 
     /// Lists [Secrets][google.cloud.secretmanager.v1.Secret].
-    pub async fn list_secrets(
-        &self,
-        req: crate::model::ListSecretsRequest,
-    ) -> Result<crate::model::ListSecretsResponse> {
+    pub async fn list_secrets(&self, req: crate::model::ListSecretsRequest) -> Result<crate::model::ListSecretsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/{}/secrets",
-                inner_client.endpoint, req.parent,
+               "{}/v1/{}/secrets",
+               inner_client.endpoint,
+               req.parent,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Creates a new [Secret][google.cloud.secretmanager.v1.Secret] containing no
     /// [SecretVersions][google.cloud.secretmanager.v1.SecretVersion].
-    pub async fn create_secret(
-        &self,
-        req: crate::model::CreateSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn create_secret(&self, req: crate::model::CreateSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/{}/secrets",
-                inner_client.endpoint, req.parent,
+               "{}/v1/{}/secrets",
+               inner_client.endpoint,
+               req.parent,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "secretId", &req.secret_id).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "secretId", &req.secret_id).map_err(Error::other)?;
         self.execute(builder, Some(req.secret)).await
     }
 
     /// Creates a new [SecretVersion][google.cloud.secretmanager.v1.SecretVersion]
     /// containing secret data and attaches it to an existing
     /// [Secret][google.cloud.secretmanager.v1.Secret].
-    pub async fn add_secret_version(
-        &self,
-        req: crate::model::AddSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn add_secret_version(&self, req: crate::model::AddSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/{}:addVersion",
-                inner_client.endpoint, req.parent,
+               "{}/v1/{}:addVersion",
+               inner_client.endpoint,
+               req.parent,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
     }
 
     /// Gets metadata for a given [Secret][google.cloud.secretmanager.v1.Secret].
-    pub async fn get_secret(
-        &self,
-        req: crate::model::GetSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn get_secret(&self, req: crate::model::GetSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .get(format!("{}/v1/{}", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .get(format!(
+               "{}/v1/{}",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Updates metadata of an existing
     /// [Secret][google.cloud.secretmanager.v1.Secret].
-    pub async fn update_secret(
-        &self,
-        req: crate::model::UpdateSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn update_secret(&self, req: crate::model::UpdateSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .patch(format!(
-                "{}/v1/{}",
-                inner_client.endpoint,
-                gax::path_parameter::PathParameter::required(&req.secret, "secret")
-                    .map_err(Error::other)?
-                    .name,
+               "{}/v1/{}",
+               inner_client.endpoint,
+               gax::path_parameter::PathParameter::required(&req.secret, "secret").map_err(Error::other)?.name,
             ))
             .query(&[("alt", "json")]);
-        let builder = gax::query_parameter::add(
-            builder,
-            "updateMask",
-            &serde_json::to_value(&req.update_mask).map_err(Error::serde)?,
-        )
-        .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "updateMask", &serde_json::to_value(&req.update_mask).map_err(Error::serde)?).map_err(Error::other)?;
         self.execute(builder, Some(req.secret)).await
     }
 
     /// Deletes a [Secret][google.cloud.secretmanager.v1.Secret].
-    pub async fn delete_secret(
-        &self,
-        req: crate::model::DeleteSecretRequest,
-    ) -> Result<wkt::Empty> {
+    pub async fn delete_secret(&self, req: crate::model::DeleteSecretRequest) -> Result<wkt::Empty> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .delete(format!("{}/v1/{}", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .delete(format!(
+               "{}/v1/{}",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "etag", &req.etag).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "etag", &req.etag).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Lists [SecretVersions][google.cloud.secretmanager.v1.SecretVersion]. This
     /// call does not return secret data.
-    pub async fn list_secret_versions(
-        &self,
-        req: crate::model::ListSecretVersionsRequest,
-    ) -> Result<crate::model::ListSecretVersionsResponse> {
+    pub async fn list_secret_versions(&self, req: crate::model::ListSecretVersionsRequest) -> Result<crate::model::ListSecretVersionsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/{}/versions",
-                inner_client.endpoint, req.parent,
+               "{}/v1/{}/versions",
+               inner_client.endpoint,
+               req.parent,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
@@ -243,14 +213,14 @@ impl SecretManagerServiceClient {
     ///
     /// `projects/*/secrets/*/versions/latest` is an alias to the most recently
     /// created [SecretVersion][google.cloud.secretmanager.v1.SecretVersion].
-    pub async fn get_secret_version(
-        &self,
-        req: crate::model::GetSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn get_secret_version(&self, req: crate::model::GetSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .get(format!("{}/v1/{}", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .get(format!(
+               "{}/v1/{}",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
@@ -260,14 +230,14 @@ impl SecretManagerServiceClient {
     ///
     /// `projects/*/secrets/*/versions/latest` is an alias to the most recently
     /// created [SecretVersion][google.cloud.secretmanager.v1.SecretVersion].
-    pub async fn access_secret_version(
-        &self,
-        req: crate::model::AccessSecretVersionRequest,
-    ) -> Result<crate::model::AccessSecretVersionResponse> {
+    pub async fn access_secret_version(&self, req: crate::model::AccessSecretVersionRequest) -> Result<crate::model::AccessSecretVersionResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .get(format!("{}/v1/{}:access", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .get(format!(
+               "{}/v1/{}:access",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
@@ -277,14 +247,14 @@ impl SecretManagerServiceClient {
     /// Sets the [state][google.cloud.secretmanager.v1.SecretVersion.state] of the
     /// [SecretVersion][google.cloud.secretmanager.v1.SecretVersion] to
     /// [DISABLED][google.cloud.secretmanager.v1.SecretVersion.State.DISABLED].
-    pub async fn disable_secret_version(
-        &self,
-        req: crate::model::DisableSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn disable_secret_version(&self, req: crate::model::DisableSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .post(format!("{}/v1/{}:disable", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .post(format!(
+               "{}/v1/{}:disable",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
     }
@@ -294,14 +264,14 @@ impl SecretManagerServiceClient {
     /// Sets the [state][google.cloud.secretmanager.v1.SecretVersion.state] of the
     /// [SecretVersion][google.cloud.secretmanager.v1.SecretVersion] to
     /// [ENABLED][google.cloud.secretmanager.v1.SecretVersion.State.ENABLED].
-    pub async fn enable_secret_version(
-        &self,
-        req: crate::model::EnableSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn enable_secret_version(&self, req: crate::model::EnableSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .post(format!("{}/v1/{}:enable", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .post(format!(
+               "{}/v1/{}:enable",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
     }
@@ -312,14 +282,14 @@ impl SecretManagerServiceClient {
     /// [SecretVersion][google.cloud.secretmanager.v1.SecretVersion] to
     /// [DESTROYED][google.cloud.secretmanager.v1.SecretVersion.State.DESTROYED]
     /// and irrevocably destroys the secret data.
-    pub async fn destroy_secret_version(
-        &self,
-        req: crate::model::DestroySecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn destroy_secret_version(&self, req: crate::model::DestroySecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .post(format!("{}/v1/{}:destroy", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .post(format!(
+               "{}/v1/{}:destroy",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
     }
@@ -331,16 +301,13 @@ impl SecretManagerServiceClient {
     /// [SecretVersions][google.cloud.secretmanager.v1.SecretVersion] are enforced
     /// according to the policy set on the associated
     /// [Secret][google.cloud.secretmanager.v1.Secret].
-    pub async fn set_iam_policy(
-        &self,
-        req: iam::model::SetIamPolicyRequest,
-    ) -> Result<iam::model::Policy> {
+    pub async fn set_iam_policy(&self, req: iam::model::SetIamPolicyRequest) -> Result<iam::model::Policy> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/{}:setIamPolicy",
-                inner_client.endpoint, req.resource,
+               "{}/v1/{}:setIamPolicy",
+               inner_client.endpoint,
+               req.resource,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -348,24 +315,16 @@ impl SecretManagerServiceClient {
 
     /// Gets the access control policy for a secret.
     /// Returns empty policy if the secret exists and does not have a policy set.
-    pub async fn get_iam_policy(
-        &self,
-        req: iam::model::GetIamPolicyRequest,
-    ) -> Result<iam::model::Policy> {
+    pub async fn get_iam_policy(&self, req: iam::model::GetIamPolicyRequest) -> Result<iam::model::Policy> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/{}:getIamPolicy",
-                inner_client.endpoint, req.resource,
+               "{}/v1/{}:getIamPolicy",
+               inner_client.endpoint,
+               req.resource,
             ))
             .query(&[("alt", "json")]);
-        let builder = gax::query_parameter::add(
-            builder,
-            "options",
-            &serde_json::to_value(&req.options).map_err(Error::serde)?,
-        )
-        .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "options", &serde_json::to_value(&req.options).map_err(Error::serde)?).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
@@ -376,16 +335,13 @@ impl SecretManagerServiceClient {
     /// Note: This operation is designed to be used for building permission-aware
     /// UIs and command-line tools, not for authorization checking. This operation
     /// may "fail open" without warning.
-    pub async fn test_iam_permissions(
-        &self,
-        req: iam::model::TestIamPermissionsRequest,
-    ) -> Result<iam::model::TestIamPermissionsResponse> {
+    pub async fn test_iam_permissions(&self, req: iam::model::TestIamPermissionsRequest) -> Result<iam::model::TestIamPermissionsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/{}:testIamPermissions",
-                inner_client.endpoint, req.resource,
+               "{}/v1/{}:testIamPermissions",
+               inner_client.endpoint,
+               req.resource,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -445,36 +401,30 @@ impl LocationsClient {
     }
 
     /// Lists information about the supported locations for this service.
-    pub async fn list_locations(
-        &self,
-        req: location::model::ListLocationsRequest,
-    ) -> Result<location::model::ListLocationsResponse> {
+    pub async fn list_locations(&self, req: location::model::ListLocationsRequest) -> Result<location::model::ListLocationsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/{}/locations",
-                inner_client.endpoint, req.name,
+               "{}/v1/{}/locations",
+               inner_client.endpoint,
+               req.name,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Gets information about a location.
-    pub async fn get_location(
-        &self,
-        req: location::model::GetLocationRequest,
-    ) -> Result<location::model::Location> {
+    pub async fn get_location(&self, req: location::model::GetLocationRequest) -> Result<location::model::Location> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
-            .get(format!("{}/v1/{}", inner_client.endpoint, req.name,))
+        let builder = inner_client.http_client
+            .get(format!(
+               "{}/v1/{}",
+               inner_client.endpoint,
+               req.name,
+            ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
