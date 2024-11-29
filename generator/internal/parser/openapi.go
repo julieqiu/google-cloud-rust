@@ -42,7 +42,7 @@ func ParseOpenAPI(opts genclient.ParserOptions) (*api.API, error) {
 	}
 	var serviceConfig *serviceconfig.Service
 	if opts.ServiceConfig != "" {
-		cfg, err := genclient.ReadServiceConfig(genclient.FindServiceConfigPath(opts))
+		cfg, err := readServiceConfig(findServiceConfigPath(opts))
 		if err != nil {
 			return nil, err
 		}
