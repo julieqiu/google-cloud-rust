@@ -964,14 +964,14 @@ func TestRust_MessageNames(t *testing.T) {
 	if got := c.MessageName(message, api.State); got != "Replication" {
 		t.Errorf("mismatched message name, got=%s, want=Replication", got)
 	}
-	if got := c.FQMessageName(message, api.State); got != "crate::model::Replication" {
+	if got := c.FullMessageName(message, api.State); got != "crate::model::Replication" {
 		t.Errorf("mismatched message name, got=%s, want=crate::model::Replication", got)
 	}
 
 	if got := c.MessageName(nested, api.State); got != "Automatic" {
 		t.Errorf("mismatched message name, got=%s, want=Automatic", got)
 	}
-	if got := c.FQMessageName(nested, api.State); got != "crate::model::replication::Automatic" {
+	if got := c.FullMessageName(nested, api.State); got != "crate::model::replication::Automatic" {
 		t.Errorf("mismatched message name, got=%s, want=crate::model::replication::Automatic", got)
 	}
 }
@@ -1002,7 +1002,7 @@ func TestRust_EnumNames(t *testing.T) {
 	if got := c.EnumName(nested, api.State); got != "State" {
 		t.Errorf("mismatched message name, got=%s, want=Automatic", got)
 	}
-	if got := c.FQEnumName(nested, api.State); got != "crate::model::secret_version::State" {
+	if got := c.FullEnumName(nested, api.State); got != "crate::model::secret_version::State" {
 		t.Errorf("mismatched message name, got=%s, want=crate::model::secret_version::State", got)
 	}
 }

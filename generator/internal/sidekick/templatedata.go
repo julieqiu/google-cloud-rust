@@ -307,7 +307,7 @@ func (m *message) Name() string {
 }
 
 func (m *message) QualifiedName() string {
-	return m.c.FQMessageName(m.s, m.state)
+	return m.c.FullMessageName(m.s, m.state)
 }
 
 func (m *message) NameSnakeCase() string {

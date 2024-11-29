@@ -350,14 +350,14 @@ func (c *RustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
 			val := c.FieldType(m.Fields[1], state)
 			return "std::collections::HashMap<" + key + "," + val + ">"
 		}
-		return c.FQMessageName(m, state)
+		return c.FullMessageName(m, state)
 	} else if f.Typez == api.ENUM_TYPE {
 		e, ok := state.EnumByID[f.TypezID]
 		if !ok {
 			slog.Error("unable to lookup type", "id", f.TypezID)
 			return ""
 		}
-		return c.FQEnumName(e, state)
+		return c.FullEnumName(e, state)
 	} else if f.Typez == api.GROUP_TYPE {
 		slog.Error("TODO(#39) - better handling of `oneof` fields")
 		return ""
@@ -401,7 +401,7 @@ func (c *RustCodec) MethodInOutTypeName(id string, state *api.APIState) string {
 		slog.Error("unable to lookup type", "id", id)
 		return ""
 	}
-	return c.FQMessageName(m, state)
+	return c.FullMessageName(m, state)
 }
 
 func (c *RustCodec) rustPackage(packageName string) string {
@@ -451,7 +451,7 @@ func (c *RustCodec) enumScopeName(e *api.Enum) string {
 	return c.messageScopeName(e.Parent, "")
 }
 
-func (c *RustCodec) FQMessageName(m *api.Message, _ *api.APIState) string {
+func (c *RustCodec) FullMessageName(m *api.Message, _ *api.APIState) string {
 	return c.messageScopeName(m.Parent, m.Package) + "::" + c.ToPascal(m.Name)
 }
 
@@ -459,7 +459,7 @@ func (c *RustCodec) EnumName(e *api.Enum, state *api.APIState) string {
 	return c.ToPascal(e.Name)
 }
 
-func (c *RustCodec) FQEnumName(e *api.Enum, _ *api.APIState) string {
+func (c *RustCodec) FullEnumName(e *api.Enum, _ *api.APIState) string {
 	return c.messageScopeName(e.Parent, "") + "::" + c.ToPascal(e.Name)
 }
 
@@ -469,7 +469,7 @@ func (c *RustCodec) EnumValueName(e *api.EnumValue, _ *api.APIState) string {
 	return rustEscapeKeyword(e.Name)
 }
 
-func (c *RustCodec) FQEnumValueName(v *api.EnumValue, state *api.APIState) string {
+func (c *RustCodec) FullEnumValueName(v *api.EnumValue, state *api.APIState) string {
 	return fmt.Sprintf("%s::%s::%s", c.enumScopeName(v.Parent), c.ToSnake(v.Parent.Name), c.EnumValueName(v, state))
 }
 

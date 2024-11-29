@@ -161,7 +161,7 @@ func (c *GoCodec) MessageName(m *api.Message, state *api.APIState) string {
 	return c.ToPascal(m.Name)
 }
 
-func (c *GoCodec) FQMessageName(m *api.Message, state *api.APIState) string {
+func (c *GoCodec) FullMessageName(m *api.Message, state *api.APIState) string {
 	return c.MessageName(m, state)
 }
 
@@ -172,7 +172,7 @@ func (c *GoCodec) EnumName(e *api.Enum, state *api.APIState) string {
 	return strcase.ToCamel(e.Name)
 }
 
-func (c *GoCodec) FQEnumName(e *api.Enum, state *api.APIState) string {
+func (c *GoCodec) FullEnumName(e *api.Enum, state *api.APIState) string {
 	return c.EnumName(e, state)
 }
 
@@ -183,7 +183,7 @@ func (c *GoCodec) EnumValueName(e *api.EnumValue, state *api.APIState) string {
 	return strings.ToUpper(e.Name)
 }
 
-func (c *GoCodec) FQEnumValueName(v *api.EnumValue, state *api.APIState) string {
+func (c *GoCodec) FullEnumValueName(v *api.EnumValue, state *api.APIState) string {
 	return c.EnumValueName(v, state)
 }
 

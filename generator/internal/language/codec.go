@@ -21,14 +21,6 @@ import "github.com/googleapis/google-cloud-rust/generator/internal/api"
 // for rendering field types, formatting comments, handling well-known types,
 // and more. It is designed to be implemented by specific language codecs.
 type Codec interface {
-	// TemplateDir returns the directory path containing the templates.
-	TemplateDir() string
-
-	// LoadWellKnownTypes loads information into the API state for handling
-	// well-known types in the target language (e.g., formatting `timestamppb`
-	// or defining wrappers around operations).
-	LoadWellKnownTypes(s *api.APIState)
-
 	// FieldAttributes returns a list of attributes (e.g., annotations) for a
 	// field, to be included immediately before its definition.
 	FieldAttributes(f *api.Field, state *api.APIState) []string
@@ -40,10 +32,6 @@ type Codec interface {
 	// as a query parameter in an HTTP request.
 	AsQueryParameter(f *api.Field, state *api.APIState) string
 
-	// MethodInOutTypeName generates the name for a message type ID when used
-	// as an input or output argument in client methods.
-	MethodInOutTypeName(id string, state *api.APIState) string
-
 	// MessageAttributes returns a list of attributes (e.g., annotations)
 	// for a message, to be included immediately before its definition.
 	MessageAttributes(m *api.Message, state *api.APIState) []string
@@ -52,28 +40,24 @@ type Codec interface {
 	// definitions.
 	MessageName(m *api.Message, state *api.APIState) string
 
-	// FQMessageName returns the fully-qualified name of a message, as used
+	// FullMessageName returns the fully-qualified name of a message, as used
 	// in references from other package components.
-	FQMessageName(m *api.Message, state *api.APIState) string
+	FullMessageName(m *api.Message, state *api.APIState) string
 
 	// EnumName returns the unqualified name of an enum type.
 	EnumName(e *api.Enum, state *api.APIState) string
 
-	// FQEnumName returns the fully-qualified name of an enum type.
-	FQEnumName(e *api.Enum, state *api.APIState) string
+	// FullEnumName returns the fully-qualified name of an enum type.
+	FullEnumName(e *api.Enum, state *api.APIState) string
 
 	// EnumValueName returns the unqualified name of an enum value.
 	EnumValueName(e *api.EnumValue, state *api.APIState) string
 
-	// FQEnumValueName returns the fully-qualified name of an enum value.
-	FQEnumValueName(e *api.EnumValue, state *api.APIState) string
+	// FullEnumValueName returns the fully-qualified name of an enum value.
+	FullEnumValueName(e *api.EnumValue, state *api.APIState) string
 
 	// OneOfType generates the string representation of a "one-of" field type.
 	OneOfType(o *api.OneOf, state *api.APIState) string
-
-	// BodyAccessor generates the accessor string for retrieving the body
-	// of a request (e.g., `.Body()`).
-	BodyAccessor(m *api.Method, state *api.APIState) string
 
 	// HTTPPathFmt returns a format string for adding path arguments to a URL.
 	// It aligns with the order and values of arguments from HTTPPathArgs.
@@ -86,22 +70,6 @@ type Codec interface {
 	// QueryParams returns key-value pairs of query parameter names and
 	// their corresponding accessors.
 	QueryParams(m *api.Method, state *api.APIState) []*api.Field
-
-	// ToSnake converts a symbol name to `snake_case`, applying language-specific
-	// mangling to avoid reserved word clashes.
-	ToSnake(string) string
-
-	// ToSnakeNoMangling converts a symbol name to `snake_case` without mangling,
-	// intended for use in contexts where templates handle the mangling.
-	ToSnakeNoMangling(string) string
-
-	// ToPascal converts a symbol name to `PascalCase`, applying language-specific
-	// mangling to avoid reserved word clashes.
-	ToPascal(string) string
-
-	// ToCamel converts a symbol name to `camelCase`, applying language-specific
-	// mangling to avoid reserved word clashes.
-	ToCamel(string) string
 
 	// FormatDocComments reformats documentation comments according to the
 	// target language's style guidelines (e.g., resolving references or adding

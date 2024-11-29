@@ -82,14 +82,14 @@ func TestGo_MessageNames(t *testing.T) {
 	if got := c.MessageName(message, api.State); got != "Replication" {
 		t.Errorf("mismatched message name, want=Replication, got=%s", got)
 	}
-	if got := c.FQMessageName(message, api.State); got != "Replication" {
+	if got := c.FullMessageName(message, api.State); got != "Replication" {
 		t.Errorf("mismatched message name, want=Replication, got=%s", got)
 	}
 
 	if got := c.MessageName(nested, api.State); got != "Replication_Automatic" {
 		t.Errorf("mismatched message name, want=SecretVersion_Automatic, got=%s", got)
 	}
-	if got := c.FQMessageName(nested, api.State); got != "Replication_Automatic" {
+	if got := c.FullMessageName(nested, api.State); got != "Replication_Automatic" {
 		t.Errorf("mismatched message name, want=Replication_Automatic, got=%s", got)
 	}
 }
@@ -119,7 +119,7 @@ func TestGo_EnumNames(t *testing.T) {
 	if got := c.EnumName(nested, api.State); got != "SecretVersion_State" {
 		t.Errorf("mismatched message name, want=SecretVersion_Automatic, got=%s", got)
 	}
-	if got := c.FQEnumName(nested, api.State); got != "SecretVersion_State" {
+	if got := c.FullEnumName(nested, api.State); got != "SecretVersion_State" {
 		t.Errorf("mismatched message name, want=SecretVersion_State, got=%s", got)
 	}
 }
