@@ -20,7 +20,6 @@ import (
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
 	"github.com/googleapis/google-cloud-rust/generator/internal/language"
-	"github.com/googleapis/google-cloud-rust/generator/internal/parser"
 )
 
 // refresh reruns the generator in one directory, using the configuration
@@ -40,9 +39,9 @@ func refresh(rootConfig *Config, cmdLine *CommandLine, output string) error {
 	var a *api.API
 	switch config.General.SpecificationFormat {
 	case "openapi":
-		a, err = parser.ParseOpenAPI(config.General.SpecificationSource, config.General.ServiceConfig, config.Source)
+		a, err = api.FromOpenAPI(config.General.SpecificationSource, config.General.ServiceConfig, config.Source)
 	case "protobuf":
-		a, err = parser.ParseProtobuf(config.General.SpecificationSource, config.General.ServiceConfig, config.Source)
+		a, err = api.FromProtobuf(config.General.SpecificationSource, config.General.ServiceConfig, config.Source)
 	default:
 		return fmt.Errorf("unknown parser %q", config.General.SpecificationFormat)
 	}
