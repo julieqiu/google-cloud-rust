@@ -117,9 +117,6 @@ type Codec interface {
 	// Validate validates the API for codec-specific restrictions.
 	Validate(api *api.API) error
 
-	// CopyrightYear returns the year the package was first generated.
-	CopyrightYear() string
-
 	// AdditionalContext provides language-specific information to the template engine.
 	AdditionalContext() any
 

@@ -15,7 +15,9 @@
 package sidekick
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
 	"github.com/googleapis/google-cloud-rust/generator/internal/language"
@@ -66,7 +68,8 @@ func (t *templateData) HasServices() bool {
 }
 
 func (t *templateData) CopyrightYear() string {
-	return t.c.CopyrightYear()
+	year, _, _ := time.Now().Date()
+	return fmt.Sprintf("%04d", year)
 }
 
 func (*templateData) BoilerPlate() []string {
