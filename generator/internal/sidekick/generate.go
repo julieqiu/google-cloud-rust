@@ -21,6 +21,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/googleapis/google-cloud-rust/generator/internal/language"
 	toml "github.com/pelletier/go-toml/v2"
 )
 
@@ -69,7 +70,7 @@ func writeSidekickToml(outDir string, config *Config) error {
 	defer f.Close()
 
 	year := config.Codec["copyright-year"]
-	for _, line := range licenseHeader(year) {
+	for _, line := range language.LicenseHeader(year) {
 		if line == "" {
 			fmt.Fprintln(f, "#")
 		} else {

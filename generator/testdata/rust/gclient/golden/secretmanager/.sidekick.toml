@@ -17,7 +17,7 @@ language = 'rust'
 template-dir = 'generator/templates'
 specification-format = 'protobuf'
 specification-source = 'generator/testdata/googleapis/google/cloud/secretmanager/v1'
-service-config = 'generator/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml'
+service-config = 'generator/testdata/generator/testdata/googleapis/google/cloud/secretmanager/v1/secretmanager_v1.yaml'
 
 [source]
 googleapis-root = 'generator/testdata/googleapis'
