@@ -721,10 +721,6 @@ func (c *rustCodec) Validate(api *api.API) error {
 	return nil
 }
 
-func (c *rustCodec) AdditionalContext() any {
-	return nil
-}
-
 func (c *rustCodec) Imports() []string {
 	return nil
 }

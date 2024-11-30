@@ -23,6 +23,7 @@ import (
 
 	"github.com/cbroglie/mustache"
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
+	"github.com/googleapis/google-cloud-rust/generator/internal/language"
 )
 
 // generateClientRequest used to generate clients.
@@ -43,7 +44,7 @@ func (r *generateClientRequest) outDir() string {
 
 // generateClient takes some state and applies it to a template to create a client
 // library.
-func generateClient(root string, req *generateClientRequest, context []any) error {
+func generateClient(root string, req *generateClientRequest, data *language.TemplateData) error {
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -60,7 +61,7 @@ func generateClient(root string, req *generateClientRequest, context []any) erro
 			// skipping partials
 			return nil
 		}
-		s, err := mustache.RenderFile(path, context...)
+		s, err := mustache.RenderFile(path, data)
 		if err != nil {
 			return err
 		}

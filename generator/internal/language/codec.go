@@ -117,9 +117,6 @@ type codec interface {
 	// Validate validates the API for codec-specific restrictions.
 	Validate(api *api.API) error
 
-	// AdditionalContext provides language-specific information to the template engine.
-	AdditionalContext() any
-
 	// Imports returns a list of imports to be included in the generated code.
 	Imports() []string
 }
