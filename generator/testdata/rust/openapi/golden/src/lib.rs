@@ -72,6 +72,7 @@ impl ConfigBuilder {
 #[allow(dead_code)]
 struct NoBody {}
 
+
 /// Stores sensitive data such as API keys, passwords, and certificates.
 /// Provides convenience while improving security.
 #[derive(Clone)]
@@ -98,135 +99,107 @@ impl SecretManagerServiceClient {
     }
 
     /// Lists information about the supported locations for this service.
-    pub async fn list_locations(
-        &self,
-        req: crate::model::ListLocationsRequest,
-    ) -> Result<crate::model::ListLocationsResponse> {
+    pub async fn list_locations(&self, req: crate::model::ListLocationsRequest) -> Result<crate::model::ListLocationsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations",
-                inner_client.endpoint, req.project,
+               "{}/v1/projects/{}/locations",
+               inner_client.endpoint,
+               req.project,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Gets information about a location.
-    pub async fn get_location(
-        &self,
-        req: crate::model::GetLocationRequest,
-    ) -> Result<crate::model::Location> {
+    pub async fn get_location(&self, req: crate::model::GetLocationRequest) -> Result<crate::model::Location> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}",
-                inner_client.endpoint, req.project, req.location,
+               "{}/v1/projects/{}/locations/{}",
+               inner_client.endpoint,
+               req.project,
+               req.location,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Lists Secrets.
-    pub async fn list_secrets(
-        &self,
-        req: crate::model::ListSecretsRequest,
-    ) -> Result<crate::model::ListSecretsResponse> {
+    pub async fn list_secrets(&self, req: crate::model::ListSecretsRequest) -> Result<crate::model::ListSecretsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/secrets",
-                inner_client.endpoint, req.project,
+               "{}/v1/projects/{}/secrets",
+               inner_client.endpoint,
+               req.project,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Creates a new Secret containing no SecretVersions.
-    pub async fn create_secret(
-        &self,
-        req: crate::model::CreateSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn create_secret(&self, req: crate::model::CreateSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets",
-                inner_client.endpoint, req.project,
+               "{}/v1/projects/{}/secrets",
+               inner_client.endpoint,
+               req.project,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "secretId", &req.secret_id).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "secretId", &req.secret_id).map_err(Error::other)?;
         self.execute(builder, Some(req.request_body)).await
     }
 
     /// Lists Secrets.
-    pub async fn list_secrets_by_project_and_location(
-        &self,
-        req: crate::model::ListSecretsByProjectAndLocationRequest,
-    ) -> Result<crate::model::ListSecretsResponse> {
+    pub async fn list_secrets_by_project_and_location(&self, req: crate::model::ListSecretsByProjectAndLocationRequest) -> Result<crate::model::ListSecretsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}/secrets",
-                inner_client.endpoint, req.project, req.location,
+               "{}/v1/projects/{}/locations/{}/secrets",
+               inner_client.endpoint,
+               req.project,
+               req.location,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Creates a new Secret containing no SecretVersions.
-    pub async fn create_secret_by_project_and_location(
-        &self,
-        req: crate::model::CreateSecretByProjectAndLocationRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn create_secret_by_project_and_location(&self, req: crate::model::CreateSecretByProjectAndLocationRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets",
-                inner_client.endpoint, req.project, req.location,
+               "{}/v1/projects/{}/locations/{}/secrets",
+               inner_client.endpoint,
+               req.project,
+               req.location,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "secretId", &req.secret_id).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "secretId", &req.secret_id).map_err(Error::other)?;
         self.execute(builder, Some(req.request_body)).await
     }
 
     /// Creates a new SecretVersion containing secret data and attaches
     /// it to an existing Secret.
-    pub async fn add_secret_version(
-        &self,
-        req: crate::model::AddSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn add_secret_version(&self, req: crate::model::AddSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets/{}:addVersion",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}:addVersion",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -234,176 +207,145 @@ impl SecretManagerServiceClient {
 
     /// Creates a new SecretVersion containing secret data and attaches
     /// it to an existing Secret.
-    pub async fn add_secret_version_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::AddSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn add_secret_version_by_project_and_location_and_secret(&self, req: crate::model::AddSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}:addVersion",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}:addVersion",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
     }
 
     /// Gets metadata for a given Secret.
-    pub async fn get_secret(
-        &self,
-        req: crate::model::GetSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn get_secret(&self, req: crate::model::GetSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/secrets/{}",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Deletes a Secret.
-    pub async fn delete_secret(
-        &self,
-        req: crate::model::DeleteSecretRequest,
-    ) -> Result<crate::model::Empty> {
+    pub async fn delete_secret(&self, req: crate::model::DeleteSecretRequest) -> Result<crate::model::Empty> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .delete(format!(
-                "{}/v1/projects/{}/secrets/{}",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "etag", &req.etag).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "etag", &req.etag).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Updates metadata of an existing Secret.
-    pub async fn update_secret(
-        &self,
-        req: crate::model::UpdateSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn update_secret(&self, req: crate::model::UpdateSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .patch(format!(
-                "{}/v1/projects/{}/secrets/{}",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder = gax::query_parameter::add(
-            builder,
-            "updateMask",
-            &serde_json::to_value(&req.update_mask).map_err(Error::serde)?,
-        )
-        .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "updateMask", &serde_json::to_value(&req.update_mask).map_err(Error::serde)?).map_err(Error::other)?;
         self.execute(builder, Some(req.request_body)).await
     }
 
     /// Gets metadata for a given Secret.
-    pub async fn get_secret_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::GetSecretByProjectAndLocationAndSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn get_secret_by_project_and_location_and_secret(&self, req: crate::model::GetSecretByProjectAndLocationAndSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Deletes a Secret.
-    pub async fn delete_secret_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::DeleteSecretByProjectAndLocationAndSecretRequest,
-    ) -> Result<crate::model::Empty> {
+    pub async fn delete_secret_by_project_and_location_and_secret(&self, req: crate::model::DeleteSecretByProjectAndLocationAndSecretRequest) -> Result<crate::model::Empty> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .delete(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "etag", &req.etag).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "etag", &req.etag).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Updates metadata of an existing Secret.
-    pub async fn update_secret_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::UpdateSecretByProjectAndLocationAndSecretRequest,
-    ) -> Result<crate::model::Secret> {
+    pub async fn update_secret_by_project_and_location_and_secret(&self, req: crate::model::UpdateSecretByProjectAndLocationAndSecretRequest) -> Result<crate::model::Secret> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .patch(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder = gax::query_parameter::add(
-            builder,
-            "updateMask",
-            &serde_json::to_value(&req.update_mask).map_err(Error::serde)?,
-        )
-        .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "updateMask", &serde_json::to_value(&req.update_mask).map_err(Error::serde)?).map_err(Error::other)?;
         self.execute(builder, Some(req.request_body)).await
     }
 
     /// Lists SecretVersions. This call does not return secret
     /// data.
-    pub async fn list_secret_versions(
-        &self,
-        req: crate::model::ListSecretVersionsRequest,
-    ) -> Result<crate::model::ListSecretVersionsResponse> {
+    pub async fn list_secret_versions(&self, req: crate::model::ListSecretVersionsRequest) -> Result<crate::model::ListSecretVersionsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/secrets/{}/versions",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}/versions",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Lists SecretVersions. This call does not return secret
     /// data.
-    pub async fn list_secret_versions_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::ListSecretVersionsByProjectAndLocationAndSecretRequest,
-    ) -> Result<crate::model::ListSecretVersionsResponse> {
+    pub async fn list_secret_versions_by_project_and_location_and_secret(&self, req: crate::model::ListSecretVersionsByProjectAndLocationAndSecretRequest) -> Result<crate::model::ListSecretVersionsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}/versions",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}/versions",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder =
-            gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
-        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token)
-            .map_err(Error::other)?;
-        let builder =
-            gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageSize", &req.page_size).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "pageToken", &req.page_token).map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "filter", &req.filter).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
@@ -411,16 +353,15 @@ impl SecretManagerServiceClient {
     ///
     /// `projects/_*_/secrets/_*_/versions/latest` is an alias to the most recently
     /// created SecretVersion.
-    pub async fn get_secret_version(
-        &self,
-        req: crate::model::GetSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn get_secret_version(&self, req: crate::model::GetSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/secrets/{}/versions/{}",
-                inner_client.endpoint, req.project, req.secret, req.version,
+               "{}/v1/projects/{}/secrets/{}/versions/{}",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
@@ -430,16 +371,16 @@ impl SecretManagerServiceClient {
     ///
     /// `projects/_*_/secrets/_*_/versions/latest` is an alias to the most recently
     /// created SecretVersion.
-    pub async fn get_secret_version_by_project_and_location_and_secret_and_version(
-        &self,
-        req: crate::model::GetSecretVersionByProjectAndLocationAndSecretAndVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn get_secret_version_by_project_and_location_and_secret_and_version(&self, req: crate::model::GetSecretVersionByProjectAndLocationAndSecretAndVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}",
-                inner_client.endpoint, req.project, req.location, req.secret, req.version,
+               "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
@@ -449,16 +390,15 @@ impl SecretManagerServiceClient {
     ///
     /// `projects/_*_/secrets/_*_/versions/latest` is an alias to the most recently
     /// created SecretVersion.
-    pub async fn access_secret_version(
-        &self,
-        req: crate::model::AccessSecretVersionRequest,
-    ) -> Result<crate::model::AccessSecretVersionResponse> {
+    pub async fn access_secret_version(&self, req: crate::model::AccessSecretVersionRequest) -> Result<crate::model::AccessSecretVersionResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/secrets/{}/versions/{}:access",
-                inner_client.endpoint, req.project, req.secret, req.version,
+               "{}/v1/projects/{}/secrets/{}/versions/{}:access",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
@@ -468,16 +408,16 @@ impl SecretManagerServiceClient {
     ///
     /// `projects/_*_/secrets/_*_/versions/latest` is an alias to the most recently
     /// created SecretVersion.
-    pub async fn access_secret_version_by_project_and_location_and_secret_and_version(
-        &self,
-        req: crate::model::AccessSecretVersionByProjectAndLocationAndSecretAndVersionRequest,
-    ) -> Result<crate::model::AccessSecretVersionResponse> {
+    pub async fn access_secret_version_by_project_and_location_and_secret_and_version(&self, req: crate::model::AccessSecretVersionByProjectAndLocationAndSecretAndVersionRequest) -> Result<crate::model::AccessSecretVersionResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:access",
-                inner_client.endpoint, req.project, req.location, req.secret, req.version,
+               "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:access",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, None::<NoBody>).await
@@ -487,16 +427,15 @@ impl SecretManagerServiceClient {
     ///
     /// Sets the state of the SecretVersion to
     /// DISABLED.
-    pub async fn disable_secret_version(
-        &self,
-        req: crate::model::DisableSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn disable_secret_version(&self, req: crate::model::DisableSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets/{}/versions/{}:disable",
-                inner_client.endpoint, req.project, req.secret, req.version,
+               "{}/v1/projects/{}/secrets/{}/versions/{}:disable",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -506,16 +445,16 @@ impl SecretManagerServiceClient {
     ///
     /// Sets the state of the SecretVersion to
     /// DISABLED.
-    pub async fn disable_secret_version_by_project_and_location_and_secret_and_version(
-        &self,
-        req: crate::model::DisableSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn disable_secret_version_by_project_and_location_and_secret_and_version(&self, req: crate::model::DisableSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:disable",
-                inner_client.endpoint, req.project, req.location, req.secret, req.version,
+               "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:disable",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -525,16 +464,15 @@ impl SecretManagerServiceClient {
     ///
     /// Sets the state of the SecretVersion to
     /// ENABLED.
-    pub async fn enable_secret_version(
-        &self,
-        req: crate::model::EnableSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn enable_secret_version(&self, req: crate::model::EnableSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets/{}/versions/{}:enable",
-                inner_client.endpoint, req.project, req.secret, req.version,
+               "{}/v1/projects/{}/secrets/{}/versions/{}:enable",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -544,16 +482,16 @@ impl SecretManagerServiceClient {
     ///
     /// Sets the state of the SecretVersion to
     /// ENABLED.
-    pub async fn enable_secret_version_by_project_and_location_and_secret_and_version(
-        &self,
-        req: crate::model::EnableSecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn enable_secret_version_by_project_and_location_and_secret_and_version(&self, req: crate::model::EnableSecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:enable",
-                inner_client.endpoint, req.project, req.location, req.secret, req.version,
+               "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:enable",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -564,16 +502,15 @@ impl SecretManagerServiceClient {
     /// Sets the state of the SecretVersion to
     /// DESTROYED and irrevocably destroys the
     /// secret data.
-    pub async fn destroy_secret_version(
-        &self,
-        req: crate::model::DestroySecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn destroy_secret_version(&self, req: crate::model::DestroySecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets/{}/versions/{}:destroy",
-                inner_client.endpoint, req.project, req.secret, req.version,
+               "{}/v1/projects/{}/secrets/{}/versions/{}:destroy",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -584,16 +521,16 @@ impl SecretManagerServiceClient {
     /// Sets the state of the SecretVersion to
     /// DESTROYED and irrevocably destroys the
     /// secret data.
-    pub async fn destroy_secret_version_by_project_and_location_and_secret_and_version(
-        &self,
-        req: crate::model::DestroySecretVersionRequest,
-    ) -> Result<crate::model::SecretVersion> {
+    pub async fn destroy_secret_version_by_project_and_location_and_secret_and_version(&self, req: crate::model::DestroySecretVersionRequest) -> Result<crate::model::SecretVersion> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:destroy",
-                inner_client.endpoint, req.project, req.location, req.secret, req.version,
+               "{}/v1/projects/{}/locations/{}/secrets/{}/versions/{}:destroy",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
+               req.version,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -604,16 +541,14 @@ impl SecretManagerServiceClient {
     ///
     /// Permissions on SecretVersions are enforced according
     /// to the policy set on the associated Secret.
-    pub async fn set_iam_policy(
-        &self,
-        req: crate::model::SetIamPolicyRequest,
-    ) -> Result<crate::model::Policy> {
+    pub async fn set_iam_policy(&self, req: crate::model::SetIamPolicyRequest) -> Result<crate::model::Policy> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets/{}:setIamPolicy",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}:setIamPolicy",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -624,16 +559,15 @@ impl SecretManagerServiceClient {
     ///
     /// Permissions on SecretVersions are enforced according
     /// to the policy set on the associated Secret.
-    pub async fn set_iam_policy_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::SetIamPolicyRequest,
-    ) -> Result<crate::model::Policy> {
+    pub async fn set_iam_policy_by_project_and_location_and_secret(&self, req: crate::model::SetIamPolicyRequest) -> Result<crate::model::Policy> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}:setIamPolicy",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}:setIamPolicy",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -641,47 +575,34 @@ impl SecretManagerServiceClient {
 
     /// Gets the access control policy for a secret.
     /// Returns empty policy if the secret exists and does not have a policy set.
-    pub async fn get_iam_policy(
-        &self,
-        req: crate::model::GetIamPolicyRequest,
-    ) -> Result<crate::model::Policy> {
+    pub async fn get_iam_policy(&self, req: crate::model::GetIamPolicyRequest) -> Result<crate::model::Policy> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/secrets/{}:getIamPolicy",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}:getIamPolicy",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder = gax::query_parameter::add(
-            builder,
-            "options.requestedPolicyVersion",
-            &req.options_requested_policy_version,
-        )
-        .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "options.requestedPolicyVersion", &req.options_requested_policy_version).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
     /// Gets the access control policy for a secret.
     /// Returns empty policy if the secret exists and does not have a policy set.
-    pub async fn get_iam_policy_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::GetIamPolicyByProjectAndLocationAndSecretRequest,
-    ) -> Result<crate::model::Policy> {
+    pub async fn get_iam_policy_by_project_and_location_and_secret(&self, req: crate::model::GetIamPolicyByProjectAndLocationAndSecretRequest) -> Result<crate::model::Policy> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .get(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}:getIamPolicy",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}:getIamPolicy",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
-        let builder = gax::query_parameter::add(
-            builder,
-            "options.requestedPolicyVersion",
-            &req.options_requested_policy_version,
-        )
-        .map_err(Error::other)?;
+        let builder = gax::query_parameter::add(builder, "options.requestedPolicyVersion", &req.options_requested_policy_version).map_err(Error::other)?;
         self.execute(builder, None::<NoBody>).await
     }
 
@@ -692,16 +613,14 @@ impl SecretManagerServiceClient {
     /// Note: This operation is designed to be used for building permission-aware
     /// UIs and command-line tools, not for authorization checking. This operation
     /// may "fail open" without warning.
-    pub async fn test_iam_permissions(
-        &self,
-        req: crate::model::TestIamPermissionsRequest,
-    ) -> Result<crate::model::TestIamPermissionsResponse> {
+    pub async fn test_iam_permissions(&self, req: crate::model::TestIamPermissionsRequest) -> Result<crate::model::TestIamPermissionsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/secrets/{}:testIamPermissions",
-                inner_client.endpoint, req.project, req.secret,
+               "{}/v1/projects/{}/secrets/{}:testIamPermissions",
+               inner_client.endpoint,
+               req.project,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
@@ -714,16 +633,15 @@ impl SecretManagerServiceClient {
     /// Note: This operation is designed to be used for building permission-aware
     /// UIs and command-line tools, not for authorization checking. This operation
     /// may "fail open" without warning.
-    pub async fn test_iam_permissions_by_project_and_location_and_secret(
-        &self,
-        req: crate::model::TestIamPermissionsRequest,
-    ) -> Result<crate::model::TestIamPermissionsResponse> {
+    pub async fn test_iam_permissions_by_project_and_location_and_secret(&self, req: crate::model::TestIamPermissionsRequest) -> Result<crate::model::TestIamPermissionsResponse> {
         let inner_client = self.inner.clone();
-        let builder = inner_client
-            .http_client
+        let builder = inner_client.http_client
             .post(format!(
-                "{}/v1/projects/{}/locations/{}/secrets/{}:testIamPermissions",
-                inner_client.endpoint, req.project, req.location, req.secret,
+               "{}/v1/projects/{}/locations/{}/secrets/{}:testIamPermissions",
+               inner_client.endpoint,
+               req.project,
+               req.location,
+               req.secret,
             ))
             .query(&[("alt", "json")]);
         self.execute(builder, Some(req)).await
