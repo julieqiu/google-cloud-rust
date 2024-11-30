@@ -51,8 +51,7 @@ func (r *generateClientRequest) outDir() string {
 
 // generateClient takes some state and applies it to a template to create a client
 // library.
-func generateClient(req *generateClientRequest) error {
-	data := newTemplateData(req.API, req.Codec)
+func generateClient(req *generateClientRequest, data interface{}) error {
 	root := filepath.Join(req.TemplateDir, req.Codec.TemplateDir())
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -70,12 +69,7 @@ func generateClient(req *generateClientRequest) error {
 			// skipping partials
 			return nil
 		}
-		var context []any
-		context = append(context, data, req)
-		if req.Codec.AdditionalContext() != nil {
-			context = append(context, req.Codec.AdditionalContext())
-		}
-		s, err := mustache.RenderFile(path, context...)
+		s, err := mustache.RenderFile(path, data)
 		if err != nil {
 			return err
 		}

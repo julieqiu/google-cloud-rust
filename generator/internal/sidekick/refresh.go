@@ -51,17 +51,27 @@ func refresh(rootConfig *Config, cmdLine *CommandLine, output string) error {
 		return err
 	}
 
-	var codec language.Codec
+	var (
+		codec language.Codec
+		data  interface{}
+	)
 	switch config.General.Language {
 	case "rust":
-		codec, err = language.NewRustCodec(output, config.Codec)
+		c, err := language.NewRustCodec(output, config.Codec)
+		if err != nil {
+			return err
+		}
+		data = language.NewRustTemplateData(a, c)
+		codec = language.Codec(c)
 	case "go":
-		codec, err = language.NewGoCodec(config.Codec)
+		c, err := language.NewGoCodec(config.Codec)
+		if err != nil {
+			return err
+		}
+		data = language.NewGoTemplateData(a, c)
+		codec = language.Codec(c)
 	default:
 		return fmt.Errorf("unknown language: %s", config.General.Language)
-	}
-	if err != nil {
-		return err
 	}
 	if err := codec.Validate(a); err != nil {
 		return err
@@ -81,5 +91,5 @@ func refresh(rootConfig *Config, cmdLine *CommandLine, output string) error {
 	if cmdLine.DryRun {
 		return nil
 	}
-	return generateClient(request)
+	return generateClient(request, data)
 }

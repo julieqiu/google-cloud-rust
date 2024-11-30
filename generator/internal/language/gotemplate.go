@@ -12,143 +12,58 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sidekick
+package language
 
 import (
 	"strings"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
-	"github.com/googleapis/google-cloud-rust/generator/internal/language"
 	"github.com/iancoleman/strcase"
 )
 
-type TemplateData struct {
-	TemplateDir      string
-	Name             string
-	Title            string
-	Description      string
-	PackageName      string
-	RequiredPackages []string
-	HasServices      bool
-	Imports          []string
-	DefaultHost      string
-	Services         []*Service
-	Messages         []*Message
-	NameToLower      string
+type GoTemplateData struct {
+	GoPackage string
+	TemplateData
 }
 
-type Service struct {
-	Methods             []*Method
-	NameToSnake         string
-	NameToPascal        string
-	ServiceNameToPascal string
-	NameToCamel         string
-	ServiceName         string
-	DocLines            []string
-	DefaultHost         string
-}
-
-type Message struct {
-	Fields            []*Field
-	BasicFields       []*Field
-	ExplicitOneOfs    []*OneOf
-	NestedMessages    []*Message
-	Enums             []*Enum
-	MessageAttributes []string
-	Name              string
-	QualifiedName     string
-	NameSnakeCase     string
-	HasNestedTypes    bool
-	DocLines          []string
-	IsMap             bool
-}
-
-type Method struct {
-	NameToSnake       string
-	NameToCamel       string
-	NameToPascal      string
-	DocLines          []string
-	InputTypeName     string
-	OutputTypeName    string
-	HTTPMethod        string
-	HTTPMethodToLower string
-	HTTPPathFmt       string
-	HTTPPathArgs      []string
-	QueryParams       []*Field
-	HasBody           bool
-	BodyAccessor      string
-}
-
-type OneOf struct {
-	NameToPascal          string
-	NameToSnake           string
-	NameToSnakeNoMangling string
-	FieldType             string
-	DocLines              []string
-	Fields                []*Field
-}
-
-type Field struct {
-	NameToSnake           string
-	NameToSnakeNoMangling string
-	NameToCamel           string
-	NameToPascal          string
-	DocLines              []string
-	FieldAttributes       []string
-	FieldType             string
-	JSONName              string
-	AsQueryParameter      string
-}
-
-type Enum struct {
-	Name          string
-	NameSnakeCase string
-	DocLines      []string
-	Values        []*EnumValue
-}
-
-type EnumValue struct {
-	DocLines []string
-	Name     string
-	Number   int32
-	EnumType string
-}
-
-// newTemplateData creates a struct used as input for Mustache templates.
+// NewGoTemplateData creates a struct used as input for Mustache templates.
 // Fields and methods defined in this struct directly correspond to Mustache
 // tags. For example, the Mustache tag {{#Services}} uses the
 // [Template.Services] field.
-func newTemplateData(model *api.API, c language.Codec) *TemplateData {
+func NewGoTemplateData(model *api.API, c *GoCodec) *GoTemplateData {
 	c.LoadWellKnownTypes(model.State)
-	return &TemplateData{
-		TemplateDir:      c.TemplateDir(),
-		Name:             model.Name,
-		Title:            model.Title,
-		Description:      model.Description,
-		PackageName:      c.PackageName(model),
-		RequiredPackages: c.RequiredPackages(),
-		HasServices:      len(model.Services) > 0,
-		Imports:          c.Imports(),
-		DefaultHost: func() string {
-			if len(model.Services) > 0 {
-				return model.Services[0].DefaultHost
-			}
-			return ""
-		}(),
-		Services: mapSlice(model.Services, func(s *api.Service) *Service {
-			return newService(s, c, model.State)
-		}),
-		Messages: mapSlice(model.Messages, func(m *api.Message) *Message {
-			return newMessage(m, c, model.State)
-		}),
-		NameToLower: strings.ToLower(model.Name),
+	return &GoTemplateData{
+		GoPackage: c.GoPackageName,
+		TemplateData: TemplateData{
+			TemplateDir:      c.TemplateDir(),
+			Name:             model.Name,
+			Title:            model.Title,
+			Description:      model.Description,
+			PackageName:      c.PackageName(model),
+			RequiredPackages: c.RequiredPackages(),
+			HasServices:      len(model.Services) > 0,
+			Imports:          c.Imports(),
+			DefaultHost: func() string {
+				if len(model.Services) > 0 {
+					return model.Services[0].DefaultHost
+				}
+				return ""
+			}(),
+			Services: mapSlice(model.Services, func(s *api.Service) *Service {
+				return newGoService(s, c, model.State)
+			}),
+			Messages: mapSlice(model.Messages, func(m *api.Message) *Message {
+				return newGoMessage(m, c, model.State)
+			}),
+			NameToLower: strings.ToLower(model.Name),
+		},
 	}
 }
 
-func newService(s *api.Service, c language.Codec, state *api.APIState) *Service {
+func newGoService(s *api.Service, c *GoCodec, state *api.APIState) *Service {
 	return &Service{
 		Methods: mapSlice(s.Methods, func(m *api.Method) *Method {
-			return newMethod(m, c, state)
+			return newGoMethod(m, c, state)
 		}),
 		NameToSnake:         c.ToSnake(s.Name),
 		NameToPascal:        c.ToPascal(s.Name),
@@ -160,27 +75,27 @@ func newService(s *api.Service, c language.Codec, state *api.APIState) *Service 
 	}
 }
 
-func newMessage(m *api.Message, c language.Codec, state *api.APIState) *Message {
+func newGoMessage(m *api.Message, c *GoCodec, state *api.APIState) *Message {
 	return &Message{
 		Fields: mapSlice(m.Fields, func(s *api.Field) *Field {
-			return newField(s, c, state)
+			return newGoField(s, c, state)
 		}),
 		BasicFields: func() []*Field {
 			filtered := filterSlice(m.Fields, func(s *api.Field) bool {
 				return !s.IsOneOf
 			})
 			return mapSlice(filtered, func(s *api.Field) *Field {
-				return newField(s, c, state)
+				return newGoField(s, c, state)
 			})
 		}(),
 		ExplicitOneOfs: mapSlice(m.OneOfs, func(s *api.OneOf) *OneOf {
-			return newOneOf(s, c, state)
+			return newGoOneOf(s, c, state)
 		}),
 		NestedMessages: mapSlice(m.Messages, func(s *api.Message) *Message {
-			return newMessage(s, c, state)
+			return newGoMessage(s, c, state)
 		}),
 		Enums: mapSlice(m.Enums, func(s *api.Enum) *Enum {
-			return newEnum(s, c, state)
+			return newGoEnum(s, c, state)
 		}),
 		MessageAttributes: c.MessageAttributes(m, state),
 		Name:              c.MessageName(m, state),
@@ -202,7 +117,7 @@ func newMessage(m *api.Message, c language.Codec, state *api.APIState) *Message 
 	}
 }
 
-func newMethod(m *api.Method, c language.Codec, state *api.APIState) *Method {
+func newGoMethod(m *api.Method, c *GoCodec, state *api.APIState) *Method {
 	return &Method{
 		BodyAccessor:      c.BodyAccessor(m, state),
 		DocLines:          c.FormatDocComments(m.Documentation),
@@ -217,29 +132,12 @@ func newMethod(m *api.Method, c language.Codec, state *api.APIState) *Method {
 		NameToSnake:       strcase.ToSnake(m.Name),
 		OutputTypeName:    c.MethodInOutTypeName(m.OutputTypeID, state),
 		QueryParams: mapSlice(c.QueryParams(m, state), func(s *api.Field) *Field {
-			return newField(s, c, state)
+			return newGoField(s, c, state)
 		}),
 	}
 }
 
-func filterSlice[T any](slice []T, predicate func(T) bool) []T {
-	result := make([]T, 0)
-	for _, v := range slice {
-		if predicate(v) {
-			result = append(result, v)
-		}
-	}
-	return result
-}
-func mapSlice[T, R any](s []T, f func(T) R) []R {
-	r := make([]R, len(s))
-	for i, v := range s {
-		r[i] = f(v)
-	}
-	return r
-}
-
-func newOneOf(oneOf *api.OneOf, c language.Codec, state *api.APIState) *OneOf {
+func newGoOneOf(oneOf *api.OneOf, c *GoCodec, state *api.APIState) *OneOf {
 	return &OneOf{
 		NameToPascal:          c.ToPascal(oneOf.Name),
 		NameToSnake:           c.ToSnake(oneOf.Name),
@@ -247,13 +145,13 @@ func newOneOf(oneOf *api.OneOf, c language.Codec, state *api.APIState) *OneOf {
 		FieldType:             c.OneOfType(oneOf, state),
 		DocLines:              c.FormatDocComments(oneOf.Documentation),
 		Fields: mapSlice(oneOf.Fields, func(field *api.Field) *Field {
-			return newField(field, c, state)
+			return newGoField(field, c, state)
 		}),
 	}
 }
 
 // Constructor function for c.Field
-func newField(field *api.Field, c language.Codec, state *api.APIState) *Field {
+func newGoField(field *api.Field, c *GoCodec, state *api.APIState) *Field {
 	return &Field{
 		NameToSnake:           c.ToSnake(field.Name),
 		NameToSnakeNoMangling: c.ToSnakeNoMangling(field.Name),
@@ -267,19 +165,19 @@ func newField(field *api.Field, c language.Codec, state *api.APIState) *Field {
 	}
 }
 
-func newEnum(e *api.Enum, c language.Codec, state *api.APIState) *Enum {
+func newGoEnum(e *api.Enum, c *GoCodec, state *api.APIState) *Enum {
 	return &Enum{
 		Name:          c.EnumName(e, state),
 		NameSnakeCase: c.ToSnake(c.EnumName(e, state)),
 		DocLines:      c.FormatDocComments(e.Documentation),
 		Values: mapSlice(e.Values, func(s *api.EnumValue) *EnumValue {
-			return newEnumValue(s, e, c, state)
+			return newGoEnumValue(s, e, c, state)
 		}),
 	}
 }
 
 // Constructor function for c.EnumValue
-func newEnumValue(ev *api.EnumValue, e *api.Enum, c language.Codec, state *api.APIState) *EnumValue {
+func newGoEnumValue(ev *api.EnumValue, e *api.Enum, c *GoCodec, state *api.APIState) *EnumValue {
 	return &EnumValue{
 		DocLines: c.FormatDocComments(ev.Documentation),
 		Name:     c.EnumValueName(ev, state),

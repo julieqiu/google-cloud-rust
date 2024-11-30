@@ -709,10 +709,6 @@ func (c *RustCodec) Validate(api *api.API) error {
 	return nil
 }
 
-func (c *RustCodec) AdditionalContext() any {
-	return nil
-}
-
 func (c *RustCodec) Imports() []string {
 	return nil
 }
@@ -785,12 +781,4 @@ func rustEscapeKeyword(symbol string) string {
 		return symbol
 	}
 	return "r#" + symbol
-}
-
-func mapSlice[T, R any](s []T, f func(T) R) []R {
-	r := make([]R, len(s))
-	for i, v := range s {
-		r[i] = f(v)
-	}
-	return r
 }

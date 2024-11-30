@@ -324,16 +324,6 @@ func (c *GoCodec) Validate(api *api.API) error {
 	return nil
 }
 
-type GoContext struct {
-	GoPackage string
-}
-
-func (c *GoCodec) AdditionalContext() any {
-	return GoContext{
-		GoPackage: c.GoPackageName,
-	}
-}
-
 func (c *GoCodec) Imports() []string {
 	var imports []string
 	for _, imp := range c.ImportMap {
