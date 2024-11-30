@@ -91,13 +91,9 @@ func (t templateData) DefaultHost() string {
 	return ""
 }
 
-func (t *templateData) Services() []*service {
-	return mapSlice(t.s.Services, func(s *api.Service) *service {
-		return &service{
-			s:     s,
-			c:     t.c,
-			state: t.s.State,
-		}
+func (t *templateData) Services() []*Service {
+	return mapSlice(t.s.Services, func(s *api.Service) *Service {
+		return newService(s, t.c, t.s.State)
 	})
 }
 
@@ -113,51 +109,6 @@ func (t *templateData) Messages() []*message {
 
 func (t *templateData) NameToLower() string {
 	return strings.ToLower(t.s.Name)
-}
-
-// service represents a service in an API.
-type service struct {
-	s     *api.Service
-	c     language.Codec
-	state *api.APIState
-}
-
-func (s *service) Methods() []*Method {
-	return mapSlice(s.s.Methods, func(m *api.Method) *Method {
-		return newMethod(m, s.c, s.state)
-	})
-}
-
-// NameToSnake converts Name to snake_case.
-func (s *service) NameToSnake() string {
-	return s.c.ToSnake(s.s.Name)
-}
-
-// NameToPascanl converts a Name to PascalCase.
-func (s *service) NameToPascal() string {
-	return s.ServiceNameToPascal()
-}
-
-// NameToPascal converts a Name to PascalCase.
-func (s *service) ServiceNameToPascal() string {
-	return s.c.ToPascal(s.s.Name)
-}
-
-// NameToCamel coverts Name to camelCase
-func (s *service) NameToCamel() string {
-	return s.c.ToCamel(s.s.Name)
-}
-
-func (s *service) ServiceName() string {
-	return s.s.Name
-}
-
-func (s *service) DocLines() []string {
-	return s.c.FormatDocComments(s.s.Documentation)
-}
-
-func (s *service) DefaultHost() string {
-	return s.s.DefaultHost
 }
 
 // message defines a message used in request or response handling.
@@ -261,6 +212,17 @@ func mapSlice[T, R any](s []T, f func(T) R) []R {
 		r[i] = f(v)
 	}
 	return r
+}
+
+type Service struct {
+	Methods             []*Method
+	NameToSnake         string
+	NameToPascal        string
+	ServiceNameToPascal string
+	NameToCamel         string
+	ServiceName         string
+	DocLines            []string
+	DefaultHost         string
 }
 
 type Method struct {
@@ -380,5 +342,20 @@ func newMethod(m *api.Method, c language.Codec, state *api.APIState) *Method {
 		QueryParams: mapSlice(c.QueryParams(m, state), func(s *api.Field) *Field {
 			return newField(s, c, state)
 		}),
+	}
+}
+
+func newService(s *api.Service, c language.Codec, state *api.APIState) *Service {
+	return &Service{
+		Methods: mapSlice(s.Methods, func(m *api.Method) *Method {
+			return newMethod(m, c, state)
+		}),
+		NameToSnake:         c.ToSnake(s.Name),
+		NameToPascal:        c.ToPascal(s.Name),
+		ServiceNameToPascal: c.ToPascal(s.Name), // Alias for clarity
+		NameToCamel:         c.ToCamel(s.Name),
+		ServiceName:         s.Name,
+		DocLines:            c.FormatDocComments(s.Documentation),
+		DefaultHost:         s.DefaultHost,
 	}
 }
