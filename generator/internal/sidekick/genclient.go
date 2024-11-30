@@ -52,7 +52,7 @@ func (r *generateClientRequest) outDir() string {
 // generateClient takes some state and applies it to a template to create a client
 // library.
 func generateClient(req *generateClientRequest) error {
-	data := newTemplateData(req.API, req.Codec)
+	data := language.NewTemplateData(req.API, req.Codec)
 	root := filepath.Join(req.TemplateDir, req.Codec.TemplateDir())
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
