@@ -17,6 +17,7 @@ package sidekick
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
 	"github.com/googleapis/google-cloud-rust/generator/internal/language"
@@ -65,14 +66,11 @@ func refresh(rootConfig *Config, cmdLine *CommandLine, output string) error {
 		return err
 	}
 
-	request := &generateClientRequest{
-		API:         a,
-		Codec:       codec,
-		OutDir:      output,
-		TemplateDir: config.General.TemplateDir,
-	}
 	if cmdLine.DryRun {
 		return nil
 	}
-	return generateClient(request)
+
+	data := newTemplateData(a, codec)
+	root := filepath.Join(config.General.TemplateDir, codec.TemplateDir())
+	return generateClient(data, root, output)
 }
