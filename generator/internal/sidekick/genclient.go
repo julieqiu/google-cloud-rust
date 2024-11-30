@@ -35,6 +35,9 @@ type generateClientRequest struct {
 	OutDir string
 	// Template directory
 	TemplateDir string
+
+	CopyrightYear string
+	BoilerPlate   []string
 }
 
 func (r *generateClientRequest) outDir() string {
@@ -67,7 +70,7 @@ func generateClient(req *generateClientRequest) error {
 			return nil
 		}
 		var context []any
-		context = append(context, data)
+		context = append(context, data, req)
 		if req.Codec.AdditionalContext() != nil {
 			context = append(context, req.Codec.AdditionalContext())
 		}
