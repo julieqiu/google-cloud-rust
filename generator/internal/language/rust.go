@@ -1026,18 +1026,6 @@ func (c *rustCodec) requiredPackages() []string {
 	return lines
 }
 
-func (c *rustCodec) copyrightYear() string {
-	return c.generationYear
-}
-
-func (c *rustCodec) packageVersion() string {
-	return c.version
-}
-
-func (c *rustCodec) sourcePackageName() string {
-	return c.sourceSpecificationPackageName
-}
-
 func (c *rustCodec) packageName(api *api.API) string {
 	if len(c.packageNameOverride) > 0 {
 		return c.packageNameOverride
@@ -1116,14 +1104,6 @@ func (c *rustCodec) streamingFeatures(api *api.API) []string {
 	}
 	sb.WriteString("]")
 	return []string{sb.String()}
-}
-
-func (c *rustCodec) imports() []string {
-	return nil
-}
-
-func (c *rustCodec) notForPublication() bool {
-	return c.doNotPublish
 }
 
 func (c *rustCodec) generateMethod(m *api.Method) bool {
