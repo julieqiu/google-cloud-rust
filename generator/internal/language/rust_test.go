@@ -89,7 +89,7 @@ func TestRust_ParseOptions(t *testing.T) {
 			"test-only":       gp,
 		},
 	}
-	if diff := cmp.Diff(want, codec, cmpopts.IgnoreFields(rustCodec{}, "ExtraPackages", "PackageMapping")); diff != "" {
+	if diff := cmp.Diff(want, codec, cmp.AllowUnexported(rustCodec{}, rustPackage{})); diff != "" {
 		t.Errorf("codec mismatch (-want, +got):\n%s", diff)
 	}
 	if want.packageNameOverride != codec.packageNameOverride {
@@ -174,7 +174,7 @@ func rustPackageNameImpl(t *testing.T, want string, opts map[string]string, api 
 func checkRustPackages(t *testing.T, got *rustCodec, want *rustCodec) {
 	t.Helper()
 	less := func(a, b *rustPackage) bool { return a.name < b.name }
-	if diff := cmp.Diff(want.extraPackages, got.extraPackages, cmpopts.SortSlices(less)); diff != "" {
+	if diff := cmp.Diff(want.extraPackages, got.extraPackages, cmp.AllowUnexported(rustPackage{}), cmpopts.SortSlices(less)); diff != "" {
 		t.Errorf("package mismatch (-want, +got):\n%s", diff)
 	}
 }
