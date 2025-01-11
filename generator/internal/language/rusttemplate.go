@@ -40,6 +40,8 @@ type RustTemplateData struct {
 	Enums             []*RustEnum
 	NameToLower       string
 	NotForPublication bool
+	HasFeatures       bool
+	Features          []string
 }
 
 type RustService struct {
@@ -177,7 +179,9 @@ func newRustTemplateData(model *api.API, c *rustCodec) *RustTemplateData {
 		}),
 		NameToLower:       strings.ToLower(model.Name),
 		NotForPublication: c.notForPublication(),
+		Features:          c.streamingFeatures(model),
 	}
+	data.HasFeatures = len(data.Features) > 0
 	// Delay this until the Codec had a chance to compute what packages are
 	// used.
 	data.RequiredPackages = c.requiredPackages()
