@@ -65,6 +65,7 @@ func newGoCodec(options map[string]string) (*goCodec, error) {
 			}
 		}
 	}
+	codec.GoPackage = codec.GoPackageName
 	return codec, nil
 }
 
@@ -84,6 +85,8 @@ type goCodec struct {
 	// intended only for testing the generator or the SDK, or the service may
 	// not be GA.
 	doNotPublish bool
+
+	goPackage string
 }
 
 type goImport struct {
@@ -106,11 +109,15 @@ func (c *goCodec) loadWellKnownTypes(s *api.APIState) {
 	s.MessageByID[duration.ID] = duration
 }
 
+<<<<<<< HEAD
 func (*goCodec) fieldAttributes(*api.Field, *api.APIState) []string {
 	return []string{}
 }
 
 func (c *goCodec) fieldType(f *api.Field, state *api.APIState) string {
+=======
+func (c *goCodec) FieldType(f *api.Field, state *api.APIState) string {
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 	var out string
 	switch f.Typez {
 	case api.STRING_TYPE:
@@ -179,11 +186,15 @@ func (c *goCodec) methodInOutTypeName(id string, s *api.APIState) string {
 	return strcase.ToCamel(m.Name)
 }
 
+<<<<<<< HEAD
 func (*goCodec) messageAttributes(*api.Message, *api.APIState) []string {
 	return []string{}
 }
 
 func (c *goCodec) messageName(m *api.Message, state *api.APIState) string {
+=======
+func (c *goCodec) MessageName(m *api.Message, state *api.APIState) string {
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 	if m.Parent != nil {
 		return c.messageName(m.Parent, state) + "_" + strcase.ToCamel(m.Name)
 	}
@@ -215,11 +226,19 @@ func (c *goCodec) enumValueName(e *api.EnumValue, state *api.APIState) string {
 	return strings.ToUpper(e.Name)
 }
 
+<<<<<<< HEAD
 func (c *goCodec) oneOfType(o *api.OneOf, _ *api.APIState) string {
 	panic("not needed for Go")
 }
 
 func (c *goCodec) bodyAccessor(m *api.Method, state *api.APIState) string {
+=======
+func (c *goCodec) FQEnumValueName(v *api.EnumValue, state *api.APIState) string {
+	return c.EnumValueName(v, state)
+}
+
+func (c *goCodec) BodyAccessor(m *api.Method, state *api.APIState) string {
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 	if m.PathInfo.BodyFieldPath == "*" {
 		// no accessor needed, use the whole request
 		return ""
@@ -280,6 +299,7 @@ func (*goCodec) formatDocComments(documentation string, _ *api.APIState) []strin
 	return ss
 }
 
+<<<<<<< HEAD
 func (*goCodec) requiredPackages() []string {
 	return []string{}
 }
@@ -295,15 +315,27 @@ func (c *goCodec) sourcePackageName() string {
 func (c *goCodec) packageName(api *api.API) string {
 	if len(c.packageNameOverride) > 0 {
 		return c.packageNameOverride
+=======
+func (c *goCodec) CopyrightYear() string {
+	return c.GenerationYear
+}
+
+func (c *goCodec) PackageName(api *api.API) string {
+	if len(c.PackageNameOverride) > 0 {
+		return c.PackageNameOverride
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 	}
 	return api.Name
 }
 
+<<<<<<< HEAD
 func (c *goCodec) packageVersion() string {
 	// Go does not need package versions in any generated file.
 	return ""
 }
 
+=======
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 func (c *goCodec) validatePackageName(newPackage, elementName string) error {
 	if c.sourceSpecificationPackageName == newPackage {
 		return nil
@@ -348,6 +380,7 @@ func (c *goCodec) validate(api *api.API) error {
 	return nil
 }
 
+<<<<<<< HEAD
 type goContext struct {
 	goPackage string
 }
@@ -359,6 +392,9 @@ func (c *goCodec) additionalContext(*api.API) any {
 }
 
 func (c *goCodec) imports() []string {
+=======
+func (c *goCodec) Imports() []string {
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 	var imports []string
 	for _, imp := range c.importMap {
 		imports = append(imports, fmt.Sprintf("%q", imp.Path))
@@ -366,11 +402,15 @@ func (c *goCodec) imports() []string {
 	return imports
 }
 
+<<<<<<< HEAD
 func (c *goCodec) notForPublication() bool {
 	return c.doNotPublish
 }
 
 func (c *goCodec) generateMethod(m *api.Method) bool {
+=======
+func (c *goCodec) GenerateMethod(m *api.Method) bool {
+>>>>>>> 3bd2f6c (impl(language): delete unused Go fields)
 	// Ignore methods without HTTP annotations, we cannot generate working
 	// RPCs for them.
 	// TODO(#499) - switch to explicitly excluding such functions. Easier to
