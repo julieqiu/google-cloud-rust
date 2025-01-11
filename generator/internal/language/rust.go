@@ -324,7 +324,7 @@ func scalarFieldType(f *api.Field) string {
 	return out
 }
 
-func (c *rustCodec) fieldFormatter(typez api.Typez) string {
+func rustFieldFormatter(typez api.Typez) string {
 	switch typez {
 	case api.INT64_TYPE,
 		api.UINT64_TYPE,
@@ -339,7 +339,7 @@ func (c *rustCodec) fieldFormatter(typez api.Typez) string {
 	}
 }
 
-func (c *rustCodec) fieldSkipAttributes(f *api.Field) []string {
+func rustFieldSkipAttributes(f *api.Field) []string {
 	switch f.Typez {
 	case api.STRING_TYPE:
 		return []string{`#[serde(skip_serializing_if = "String::is_empty")]`}
@@ -351,7 +351,7 @@ func (c *rustCodec) fieldSkipAttributes(f *api.Field) []string {
 }
 
 func (c *rustCodec) fieldBaseAttributes(f *api.Field) []string {
-	if c.toCamel(c.toSnake(f.Name)) != f.JSONName {
+	if rustToCamel(rustToSnake(f.Name)) != f.JSONName {
 		return []string{fmt.Sprintf(`#[serde(rename = "%s")]`, f.JSONName)}
 	}
 	return []string{}
@@ -368,11 +368,11 @@ func (c *rustCodec) wrapperFieldAttributes(f *api.Field, attributes []string) []
 	var formatter string
 	switch f.TypezID {
 	case ".google.protobuf.BytesValue":
-		formatter = c.fieldFormatter(api.BYTES_TYPE)
+		formatter = rustFieldFormatter(api.BYTES_TYPE)
 	case ".google.protobuf.UInt64Value":
-		formatter = c.fieldFormatter(api.UINT64_TYPE)
+		formatter = rustFieldFormatter(api.UINT64_TYPE)
 	case ".google.protobuf.Int64Value":
-		formatter = c.fieldFormatter(api.INT64_TYPE)
+		formatter = rustFieldFormatter(api.INT64_TYPE)
 	default:
 		return attributes
 	}
@@ -387,7 +387,7 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 	if f.Synthetic {
 		return []string{`#[serde(skip)]`}
 	}
-	attributes := c.fieldBaseAttributes(f)
+	attributes := rustFieldBaseAttributes(f)
 	switch f.Typez {
 	case api.DOUBLE_TYPE,
 		api.FLOAT_TYPE,
@@ -406,7 +406,7 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 		if f.Repeated {
 			return append(attributes, `#[serde(skip_serializing_if = "Vec::is_empty")]`)
 		}
-		return append(attributes, c.fieldSkipAttributes(f)...)
+		return append(attributes, rustFieldSkipAttributes(f)...)
 
 	case api.INT64_TYPE,
 		api.UINT64_TYPE,
@@ -414,7 +414,7 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 		api.SFIXED64_TYPE,
 		api.SINT64_TYPE,
 		api.BYTES_TYPE:
-		formatter := c.fieldFormatter(f.Typez)
+		formatter := rustFieldFormatter(f.Typez)
 		if f.Optional {
 			attributes = append(attributes, `#[serde(skip_serializing_if = "Option::is_none")]`)
 			return append(attributes, fmt.Sprintf(`#[serde_as(as = "Option<%s>")]`, formatter))
@@ -423,7 +423,7 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 			attributes = append(attributes, `#[serde(skip_serializing_if = "Vec::is_empty")]`)
 			return append(attributes, fmt.Sprintf(`#[serde_as(as = "Vec<%s>")]`, formatter))
 		}
-		attributes = append(attributes, c.fieldSkipAttributes(f)...)
+		attributes = append(attributes, rustFieldSkipAttributes(f)...)
 		return append(attributes, fmt.Sprintf(`#[serde_as(as = "%s")]`, formatter))
 
 	case api.MESSAGE_TYPE:
@@ -444,8 +444,8 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 				slog.Error("missing key or value in map field")
 				return attributes
 			}
-			keyFormat := c.fieldFormatter(key.Typez)
-			valFormat := c.fieldFormatter(value.Typez)
+			keyFormat := rustFieldFormatter(key.Typez)
+			valFormat := rustFieldFormatter(value.Typez)
 			if keyFormat == "_" && valFormat == "_" {
 				return attributes
 			}
@@ -459,29 +459,29 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 	}
 }
 
-func (c *rustCodec) nonPrimitiveFieldType(f *api.Field, state *api.APIState) string {
-	return c.fieldType(f, state, false)
+func rustNonPrimitiveFieldType(f *api.Field, state *api.APIState) string {
+	return rustFieldType(f, state, false)
 }
 
-func (c *rustCodec) primitiveFieldType(f *api.Field, state *api.APIState) string {
-	return c.fieldType(f, state, true)
+func rustPrimitiveFieldType(f *api.Field, state *api.APIState) string {
+	return rustFieldType(f, state, true)
 }
 
-func (c *rustCodec) fieldType(f *api.Field, state *api.APIState, primitive bool) string {
+func rustFieldType(f *api.Field, state *api.APIState, primitive bool) string {
 	if !primitive && f.IsOneOf {
-		return fmt.Sprintf("(%s)", c.baseFieldType(f, state))
+		return fmt.Sprintf("(%s)", rustBaseFieldType(f, state))
 	}
 	if !primitive && f.Repeated {
-		return fmt.Sprintf("Vec<%s>", c.baseFieldType(f, state))
+		return fmt.Sprintf("Vec<%s>", rustBaseFieldType(f, state))
 	}
 	if !primitive && f.Optional {
-		return fmt.Sprintf("Option<%s>", c.baseFieldType(f, state))
+		return fmt.Sprintf("Option<%s>", rustBaseFieldType(f, state))
 	}
-	return c.baseFieldType(f, state)
+	return rustBaseFieldType(f, state)
 }
 
 // Returns the field type, ignoring any repeated or optional attributes.
-func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
+func rustBaseFieldType(f *api.Field, state *api.APIState) string {
 	if f.Typez == api.MESSAGE_TYPE {
 		m, ok := state.MessageByID[f.TypezID]
 		if !ok {
@@ -489,8 +489,8 @@ func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
 			return ""
 		}
 		if m.IsMap {
-			key := c.nonPrimitiveFieldType(m.Fields[0], state)
-			val := c.nonPrimitiveFieldType(m.Fields[1], state)
+			key := rustNonPrimitiveFieldType(m.Fields[0], state)
+			val := rustNonPrimitiveFieldType(m.Fields[1], state)
 			return "std::collections::HashMap<" + key + "," + val + ">"
 		}
 		return c.fqMessageName(m, state)
@@ -516,9 +516,9 @@ func (c *rustCodec) asQueryParameter(f *api.Field) string {
 		// query. The conversion to `serde_json::Value` is expensive, but very
 		// few requests use nested objects as query parameters. Furthermore,
 		// the conversion is skipped if the object field is `None`.`
-		return fmt.Sprintf("&serde_json::to_value(&req.%s).map_err(Error::serde)?", c.toSnake(f.Name))
+		return fmt.Sprintf("&serde_json::to_value(&req.%s).map_err(Error::serde)?", rustToSnake(f.Name))
 	}
-	return fmt.Sprintf("&req.%s", c.toSnake(f.Name))
+	return fmt.Sprintf("&req.%s", rustToSnake(f.Name))
 }
 
 func (c *rustCodec) templatesProvider() templateProvider {
@@ -585,7 +585,7 @@ func (c *rustCodec) messageAttributes(*api.Message, *api.APIState) []string {
 }
 
 func (c *rustCodec) messageName(m *api.Message) string {
-	return c.toPascal(m.Name)
+	return rustToPascal(m.Name)
 }
 
 func (c *rustCodec) messageScopeName(m *api.Message, childPackageName string) string {
@@ -593,39 +593,39 @@ func (c *rustCodec) messageScopeName(m *api.Message, childPackageName string) st
 		return c.rustPackage(childPackageName)
 	}
 	if m.Parent == nil {
-		return c.rustPackage(m.Package) + "::" + c.toSnake(m.Name)
+		return c.rustPackage(m.Package) + "::" + rustToSnake(m.Name)
 	}
-	return c.messageScopeName(m.Parent, m.Package) + "::" + c.toSnake(m.Name)
+	return c.messageScopeName(m.Parent, m.Package) + "::" + rustToSnake(m.Name)
 }
 
 func (c *rustCodec) enumScopeName(e *api.Enum) string {
 	return c.messageScopeName(e.Parent, e.Package)
 }
 
-func (c *rustCodec) fqMessageName(m *api.Message, _ *api.APIState) string {
-	return c.messageScopeName(m.Parent, m.Package) + "::" + c.toPascal(m.Name)
+func rustFQMessageName(m *api.Message, _ *api.APIState) string {
+	return rustMessageScopeName(m.Parent, m.Package) + "::" + rustToPascal(m.Name)
 }
 
-func (c *rustCodec) enumName(e *api.Enum) string {
-	return c.toPascal(e.Name)
+func rustEnumName(e *api.Enum) string {
+	return rustToPascal(e.Name)
 }
 
-func (c *rustCodec) fqEnumName(e *api.Enum) string {
-	return c.messageScopeName(e.Parent, e.Package) + "::" + c.toPascal(e.Name)
+func rustFQEnumName(e *api.Enum) string {
+	return rustMessageScopeName(e.Parent, e.Package) + "::" + rustToPascal(e.Name)
 }
 
-func (c *rustCodec) enumValueName(e *api.EnumValue, _ *api.APIState) string {
+func rustEnumValueName(e *api.EnumValue) string {
 	// The Protobuf naming convention is to use SCREAMING_SNAKE_CASE, we do not
 	// need to change anything for Rust
 	return rustEscapeKeyword(e.Name)
 }
 
 func (c *rustCodec) fqEnumValueName(v *api.EnumValue, state *api.APIState) string {
-	return fmt.Sprintf("%s::%s::%s", c.enumScopeName(v.Parent), c.toSnake(v.Parent.Name), c.enumValueName(v, state))
+	return fmt.Sprintf("%s::%s::%s", c.enumScopeName(v.Parent), rustToSnake(v.Parent.Name), c.enumValueName(v, state))
 }
 
 func (c *rustCodec) oneOfType(o *api.OneOf, _ *api.APIState) string {
-	return c.messageScopeName(o.Parent, "") + "::" + c.toPascal(o.Name)
+	return c.messageScopeName(o.Parent, "") + "::" + rustToPascal(o.Name)
 }
 
 func (c *rustCodec) bodyAccessor(m *api.Method) string {
@@ -633,7 +633,7 @@ func (c *rustCodec) bodyAccessor(m *api.Method) string {
 		// no accessor needed, use the whole request
 		return ""
 	}
-	return "." + c.toSnake(m.PathInfo.BodyFieldPath)
+	return "." + rustToSnake(m.PathInfo.BodyFieldPath)
 }
 
 func (c *rustCodec) httpPathFmt(m *api.PathInfo) string {
@@ -678,26 +678,26 @@ func (c *rustCodec) httpPathFmt(m *api.PathInfo) string {
 // ```
 //
 // and so on.
-func (c *rustCodec) unwrapFieldPath(components []string, requestAccess string) (string, string) {
+func rustUnwrapFieldPath(components []string, requestAccess string) (string, string) {
 	if len(components) == 1 {
-		return requestAccess + "." + c.toSnake(components[0]), components[0]
+		return requestAccess + "." + rustToSnake(components[0]), components[0]
 	}
-	unwrap, name := c.unwrapFieldPath(components[0:len(components)-1], "&req")
+	unwrap, name := rustUnwrapFieldPath(components[0:len(components)-1], "&req")
 	last := components[len(components)-1]
 	return fmt.Sprintf("gax::path_parameter::PathParameter::required(%s, \"%s\").map_err(Error::other)?.%s", unwrap, name, last), ""
 }
 
-func (c *rustCodec) derefFieldPath(fieldPath string) string {
+func rustDerefFieldPath(fieldPath string) string {
 	components := strings.Split(fieldPath, ".")
-	unwrap, _ := c.unwrapFieldPath(components, "req")
+	unwrap, _ := rustUnwrapFieldPath(components, "req")
 	return unwrap
 }
 
-func (c *rustCodec) httpPathArgs(h *api.PathInfo) []string {
+func rustHTTPPathArgs(h *api.PathInfo) []string {
 	var args []string
 	for _, arg := range h.PathTemplate {
 		if arg.FieldPath != nil {
-			args = append(args, c.derefFieldPath(*arg.FieldPath))
+			args = append(args, rustDerefFieldPath(*arg.FieldPath))
 		}
 	}
 	return args
@@ -709,11 +709,11 @@ func (c *rustCodec) httpPathArgs(h *api.PathInfo) []string {
 // This type of conversion can easily introduce keywords. Consider
 //
 //	`toSnake("True") -> "true"`
-func (c *rustCodec) toSnake(symbol string) string {
-	return rustEscapeKeyword(c.toSnakeNoMangling(symbol))
+func rustToSnake(symbol string) string {
+	return rustEscapeKeyword(rustToSnakeNoMangling(symbol))
 }
 
-func (*rustCodec) toSnakeNoMangling(symbol string) string {
+func rustToSnakeNoMangling(symbol string) string {
 	if strings.ToLower(symbol) == symbol {
 		return symbol
 	}
@@ -727,7 +727,7 @@ func (*rustCodec) toSnakeNoMangling(symbol string) string {
 // This type of conversion rarely introduces keywords. The one example is
 //
 //	`toPascal("self") -> "Self"`
-func (*rustCodec) toPascal(symbol string) string {
+func rustToPascal(symbol string) string {
 	if symbol == "" {
 		return ""
 	}
@@ -738,7 +738,7 @@ func (*rustCodec) toPascal(symbol string) string {
 	return rustEscapeKeyword(strcase.ToCamel(symbol))
 }
 
-func (*rustCodec) toCamel(symbol string) string {
+func rustToCamel(symbol string) string {
 	return rustEscapeKeyword(strcase.ToLowerCamel(symbol))
 }
 
@@ -910,7 +910,7 @@ func (c *rustCodec) tryFieldRustdocLink(id string, state *api.APIState) string {
 	for _, f := range m.Fields {
 		if f.Name == fieldName {
 			if !f.IsOneOf {
-				return fmt.Sprintf("%s::%s", c.fqMessageName(m, state), c.toSnake(f.Name))
+				return fmt.Sprintf("%s::%s", c.fqMessageName(m, state), rustToSnake(f.Name))
 			} else {
 				return c.tryOneOfRustdocLink(f, m, state)
 			}
@@ -923,7 +923,7 @@ func (c *rustCodec) tryOneOfRustdocLink(field *api.Field, message *api.Message, 
 	for _, o := range message.OneOfs {
 		for _, f := range o.Fields {
 			if f.ID == field.ID {
-				return fmt.Sprintf("%s::%s", c.fqMessageName(message, state), c.toSnake(o.Name))
+				return fmt.Sprintf("%s::%s", c.fqMessageName(message, state), rustToSnake(o.Name))
 			}
 		}
 	}
@@ -964,7 +964,7 @@ func (c *rustCodec) methodRustdocLink(m *api.Method, state *api.APIState) string
 	if !ok {
 		return ""
 	}
-	return fmt.Sprintf("%s::%s", c.serviceRustdocLink(s, state), c.toSnake(m.Name))
+	return fmt.Sprintf("%s::%s", c.serviceRustdocLink(s, state), rustToSnake(m.Name))
 }
 
 func (c *rustCodec) serviceRustdocLink(s *api.Service, _ *api.APIState) string {
