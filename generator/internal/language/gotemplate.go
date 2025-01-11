@@ -40,6 +40,7 @@ type GoTemplateData struct {
 	Enums             []*GoEnum
 	NameToLower       string
 	NotForPublication bool
+	GoPackage         string
 }
 
 type GoService struct {
@@ -59,7 +60,6 @@ type GoMessage struct {
 	ExplicitOneOfs     []*GoOneOf
 	NestedMessages     []*GoMessage
 	Enums              []*GoEnum
-	MessageAttributes  []string
 	Name               string
 	QualifiedName      string
 	NameSnakeCase      string
@@ -119,7 +119,6 @@ type GoField struct {
 	NameToCamel           string
 	NameToPascal          string
 	DocLines              []string
-	FieldAttributes       []string
 	FieldType             string
 	PrimitiveFieldType    string
 	JSONName              string
@@ -175,7 +174,8 @@ func newGoTemplateData(model *api.API, c *goCodec) *GoTemplateData {
 			return newGoEnum(e, c, model.State)
 		}),
 		NameToLower:       strings.ToLower(model.Name),
-		NotForPublication: c.notForPublication(),
+		NotForPublication: c.doNotPublish,
+		GoPackage:         c.goPackageName,
 	}
 	// Delay this until the *GoCodec had a chance to compute what packages are
 	// used.
@@ -245,10 +245,9 @@ func newGoMessage(m *api.Message, c *goCodec, state *api.APIState) *GoMessage {
 		Enums: mapSlice(m.Enums, func(s *api.Enum) *GoEnum {
 			return newGoEnum(s, c, state)
 		}),
-		MessageAttributes: c.messageAttributes(m, state),
-		Name:              c.messageName(m),
-		QualifiedName:     c.fqMessageName(m),
-		NameSnakeCase:     c.toSnake(m.Name),
+		Name:          c.messageName(m),
+		QualifiedName: c.messageName(m),
+		NameSnakeCase: c.toSnake(m.Name),
 		HasNestedTypes: func() bool {
 			if len(m.Enums) > 0 || len(m.OneOfs) > 0 {
 				return true
@@ -327,7 +326,6 @@ func newGoField(field *api.Field, c *goCodec, state *api.APIState) *GoField {
 		NameToCamel:           c.toCamel(field.Name),
 		NameToPascal:          c.toPascal(field.Name),
 		DocLines:              c.formatDocComments(field.Documentation, state),
-		FieldAttributes:       c.fieldAttributes(field, state),
 		FieldType:             c.fieldType(field, state),
 		PrimitiveFieldType:    c.primitiveFieldType(field, state),
 		JSONName:              field.JSONName,

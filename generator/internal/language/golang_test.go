@@ -88,9 +88,6 @@ func TestGo_MessageNames(t *testing.T) {
 			if got := c.messageName(test.message); got != test.want {
 				t.Errorf("c.messageName = %q; want = %q", got, test.want)
 			}
-			if got := c.fqMessageName(test.message); got != test.want {
-				t.Errorf("c.fqMessageName = %q; want = %q", got, test.want)
-			}
 		})
 	}
 }
@@ -114,13 +111,10 @@ func TestGo_EnumNames(t *testing.T) {
 		ID:   "..SecretVersion.State",
 	}
 
-	model := newTestAPI([]*api.Message{message}, []*api.Enum{nested}, []*api.Service{})
+	_ = newTestAPI([]*api.Message{message}, []*api.Enum{nested}, []*api.Service{})
 	c := &goCodec{}
 	if got := c.enumName(nested); got != "SecretVersion_State" {
 		t.Errorf("mismatched message name, want=SecretVersion_Automatic, got=%s", got)
-	}
-	if got := c.fqEnumName(nested, model.State); got != "SecretVersion_State" {
-		t.Errorf("mismatched message name, want=SecretVersion_State, got=%s", got)
 	}
 }
 

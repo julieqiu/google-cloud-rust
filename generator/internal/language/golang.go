@@ -106,10 +106,6 @@ func (c *goCodec) loadWellKnownTypes(s *api.APIState) {
 	s.MessageByID[duration.ID] = duration
 }
 
-func (*goCodec) fieldAttributes(*api.Field, *api.APIState) []string {
-	return []string{}
-}
-
 func (c *goCodec) fieldType(f *api.Field, state *api.APIState) string {
 	var out string
 	switch f.Typez {
@@ -183,10 +179,6 @@ func (c *goCodec) methodInOutTypeName(id string, s *api.APIState) string {
 	return strcase.ToCamel(m.Name)
 }
 
-func (*goCodec) messageAttributes(*api.Message, *api.APIState) []string {
-	return []string{}
-}
-
 func (c *goCodec) messageName(m *api.Message) string {
 	if m.Parent != nil {
 		return c.messageName(m.Parent) + "_" + strcase.ToCamel(m.Name)
@@ -197,29 +189,11 @@ func (c *goCodec) messageName(m *api.Message) string {
 	return c.toPascal(m.Name)
 }
 
-func (c *goCodec) messageName2(m *api.Message, state *api.APIState) string {
-	if m.Parent != nil {
-		return c.messageName2(m.Parent, state) + "_" + strcase.ToCamel(m.Name)
-	}
-	if imp, ok := c.importMap[m.Package]; ok {
-		return imp.Name + "." + c.toPascal(m.Name)
-	}
-	return c.toPascal(m.Name)
-}
-
-func (c *goCodec) fqMessageName(m *api.Message) string {
-	return c.messageName(m)
-}
-
 func (c *goCodec) enumName(e *api.Enum) string {
 	if e.Parent != nil {
 		return c.messageName(e.Parent) + "_" + strcase.ToCamel(e.Name)
 	}
 	return strcase.ToCamel(e.Name)
-}
-
-func (c *goCodec) fqEnumName(e *api.Enum, state *api.APIState) string {
-	return c.enumName(e)
 }
 
 func (c *goCodec) enumValueName(e *api.EnumValue) string {
@@ -358,27 +332,12 @@ func (c *goCodec) validate(api *api.API) error {
 	return nil
 }
 
-// GoContext provides additional context for the Go template.
-type GoContext struct {
-	GoPackage string
-}
-
-func (c *goCodec) additionalContext(*api.API) any {
-	return GoContext{
-		GoPackage: c.goPackageName,
-	}
-}
-
 func (c *goCodec) imports() []string {
 	var imports []string
 	for _, imp := range c.importMap {
 		imports = append(imports, fmt.Sprintf("%q", imp.Path))
 	}
 	return imports
-}
-
-func (c *goCodec) notForPublication() bool {
-	return c.doNotPublish
 }
 
 func (c *goCodec) generateMethod(m *api.Method) bool {
