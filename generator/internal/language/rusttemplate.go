@@ -145,7 +145,7 @@ type RustEnumValue struct {
 // Fields and methods defined in this struct directly correspond to Mustache
 // tags. For example, the Mustache tag {{#Services}} uses the
 // [Template.Services] field.
-func newRustTemplateData(model *api.API, c *RustCodec) *RustTemplateData {
+func newRustTemplateData(model *api.API, c *rustCodec) *RustTemplateData {
 	c.LoadWellKnownTypes(model.State)
 	data := &RustTemplateData{
 		Name:              model.Name,
@@ -198,7 +198,7 @@ func newRustTemplateData(model *api.API, c *RustCodec) *RustTemplateData {
 	return data
 }
 
-func newRustService(s *api.Service, c *RustCodec, state *api.APIState) *RustService {
+func newRustService(s *api.Service, c *rustCodec, state *api.APIState) *RustService {
 	// Some codecs skip some methods.
 	methods := filterSlice(s.Methods, func(m *api.Method) bool {
 		return c.GenerateMethod(m)
@@ -217,7 +217,7 @@ func newRustService(s *api.Service, c *RustCodec, state *api.APIState) *RustServ
 	}
 }
 
-func newRustMessage(m *api.Message, c *RustCodec, state *api.APIState) *RustMessage {
+func newRustMessage(m *api.Message, c *rustCodec, state *api.APIState) *RustMessage {
 	hasSyntheticFields := false
 	for _, f := range m.Fields {
 		if f.Synthetic {
@@ -271,7 +271,7 @@ func newRustMessage(m *api.Message, c *RustCodec, state *api.APIState) *RustMess
 	}
 }
 
-func newRustMethod(m *api.Method, c *RustCodec, state *api.APIState) *RustMethod {
+func newRustMethod(m *api.Method, c *rustCodec, state *api.APIState) *RustMethod {
 	method := &RustMethod{
 		BodyAccessor:      c.BodyAccessor(m, state),
 		DocLines:          c.FormatDocComments(m.Documentation, state),
@@ -306,7 +306,7 @@ func newRustMethod(m *api.Method, c *RustCodec, state *api.APIState) *RustMethod
 	return method
 }
 
-func newRustOneOf(oneOf *api.OneOf, c *RustCodec, state *api.APIState) *RustOneOf {
+func newRustOneOf(oneOf *api.OneOf, c *rustCodec, state *api.APIState) *RustOneOf {
 	return &RustOneOf{
 		NameToPascal:          c.ToPascal(oneOf.Name),
 		NameToSnake:           c.ToSnake(oneOf.Name),
@@ -319,7 +319,7 @@ func newRustOneOf(oneOf *api.OneOf, c *RustCodec, state *api.APIState) *RustOneO
 	}
 }
 
-func newRustField(field *api.Field, c *RustCodec, state *api.APIState) *RustField {
+func newRustField(field *api.Field, c *rustCodec, state *api.APIState) *RustField {
 	if field == nil {
 		return nil
 	}
@@ -337,7 +337,7 @@ func newRustField(field *api.Field, c *RustCodec, state *api.APIState) *RustFiel
 	}
 }
 
-func newRustEnum(e *api.Enum, c *RustCodec, state *api.APIState) *RustEnum {
+func newRustEnum(e *api.Enum, c *rustCodec, state *api.APIState) *RustEnum {
 	return &RustEnum{
 		Name:          c.EnumName(e, state),
 		NameSnakeCase: c.ToSnake(c.EnumName(e, state)),
@@ -348,7 +348,7 @@ func newRustEnum(e *api.Enum, c *RustCodec, state *api.APIState) *RustEnum {
 	}
 }
 
-func newRustEnumValue(ev *api.EnumValue, e *api.Enum, c *RustCodec, state *api.APIState) *RustEnumValue {
+func newRustEnumValue(ev *api.EnumValue, e *api.Enum, c *rustCodec, state *api.APIState) *RustEnumValue {
 	return &RustEnumValue{
 		DocLines: c.FormatDocComments(ev.Documentation, state),
 		Name:     c.EnumValueName(ev, state),
