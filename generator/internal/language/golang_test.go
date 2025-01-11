@@ -72,25 +72,26 @@ func TestGo_MessageNames(t *testing.T) {
 		},
 	}
 	nested := &api.Message{
-		Name: "Automatic",
-		ID:   "..Replication.Automatic",
+		Parent: message,
+		Name:   "Automatic",
+		ID:     "..Replication.Automatic",
 	}
-
-	api := newTestAPI([]*api.Message{message, nested}, []*api.Enum{}, []*api.Service{})
-
-	c := &goCodec{}
-	if got := c.messageName(message, api.State); got != "Replication" {
-		t.Errorf("mismatched message name, want=Replication, got=%s", got)
-	}
-	if got := c.fqMessageName(message, api.State); got != "Replication" {
-		t.Errorf("mismatched message name, want=Replication, got=%s", got)
-	}
-
-	if got := c.messageName(nested, api.State); got != "Replication_Automatic" {
-		t.Errorf("mismatched message name, want=SecretVersion_Automatic, got=%s", got)
-	}
-	if got := c.fqMessageName(nested, api.State); got != "Replication_Automatic" {
-		t.Errorf("mismatched message name, want=Replication_Automatic, got=%s", got)
+	for _, test := range []struct {
+		message *api.Message
+		want    string
+	}{
+		{message, "Replication"},
+		{nested, "Replication_Automatic"},
+	} {
+		t.Run(test.want, func(t *testing.T) {
+			c := &goCodec{}
+			if got := c.messageName(test.message); got != test.want {
+				t.Errorf("c.messageName = %q; want = %q", got, test.want)
+			}
+			if got := c.fqMessageName(test.message); got != test.want {
+				t.Errorf("c.fqMessageName = %q; want = %q", got, test.want)
+			}
+		})
 	}
 }
 
@@ -113,13 +114,12 @@ func TestGo_EnumNames(t *testing.T) {
 		ID:   "..SecretVersion.State",
 	}
 
-	api := newTestAPI([]*api.Message{message}, []*api.Enum{nested}, []*api.Service{})
-
+	model := newTestAPI([]*api.Message{message}, []*api.Enum{nested}, []*api.Service{})
 	c := &goCodec{}
-	if got := c.enumName(nested, api.State); got != "SecretVersion_State" {
+	if got := c.enumName(nested); got != "SecretVersion_State" {
 		t.Errorf("mismatched message name, want=SecretVersion_Automatic, got=%s", got)
 	}
-	if got := c.fqEnumName(nested, api.State); got != "SecretVersion_State" {
+	if got := c.fqEnumName(nested, model.State); got != "SecretVersion_State" {
 		t.Errorf("mismatched message name, want=SecretVersion_State, got=%s", got)
 	}
 }

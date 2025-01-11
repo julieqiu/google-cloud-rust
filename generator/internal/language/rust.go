@@ -500,7 +500,7 @@ func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
 			slog.Error("unable to lookup type", "id", f.TypezID)
 			return ""
 		}
-		return c.fqEnumName(e, state)
+		return c.fqEnumName(e)
 	} else if f.Typez == api.GROUP_TYPE {
 		slog.Error("TODO(#39) - better handling of `oneof` fields")
 		return ""
@@ -509,7 +509,7 @@ func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
 
 }
 
-func (c *rustCodec) asQueryParameter(f *api.Field, state *api.APIState) string {
+func (c *rustCodec) asQueryParameter(f *api.Field) string {
 	if f.Typez == api.MESSAGE_TYPE {
 		// Query parameters in nested messages are first converted to a
 		// `serde_json::Value`` and then recursively merged into the request
@@ -584,7 +584,7 @@ func (c *rustCodec) messageAttributes(*api.Message, *api.APIState) []string {
 	}
 }
 
-func (c *rustCodec) messageName(m *api.Message, state *api.APIState) string {
+func (c *rustCodec) messageName(m *api.Message) string {
 	return c.toPascal(m.Name)
 }
 
@@ -606,11 +606,11 @@ func (c *rustCodec) fqMessageName(m *api.Message, _ *api.APIState) string {
 	return c.messageScopeName(m.Parent, m.Package) + "::" + c.toPascal(m.Name)
 }
 
-func (c *rustCodec) enumName(e *api.Enum, state *api.APIState) string {
+func (c *rustCodec) enumName(e *api.Enum) string {
 	return c.toPascal(e.Name)
 }
 
-func (c *rustCodec) fqEnumName(e *api.Enum, _ *api.APIState) string {
+func (c *rustCodec) fqEnumName(e *api.Enum) string {
 	return c.messageScopeName(e.Parent, e.Package) + "::" + c.toPascal(e.Name)
 }
 
@@ -628,7 +628,7 @@ func (c *rustCodec) oneOfType(o *api.OneOf, _ *api.APIState) string {
 	return c.messageScopeName(o.Parent, "") + "::" + c.toPascal(o.Name)
 }
 
-func (c *rustCodec) bodyAccessor(m *api.Method, state *api.APIState) string {
+func (c *rustCodec) bodyAccessor(m *api.Method) string {
 	if m.PathInfo.BodyFieldPath == "*" {
 		// no accessor needed, use the whole request
 		return ""
@@ -636,7 +636,7 @@ func (c *rustCodec) bodyAccessor(m *api.Method, state *api.APIState) string {
 	return "." + c.toSnake(m.PathInfo.BodyFieldPath)
 }
 
-func (c *rustCodec) httpPathFmt(m *api.PathInfo, state *api.APIState) string {
+func (c *rustCodec) httpPathFmt(m *api.PathInfo) string {
 	fmt := ""
 	for _, segment := range m.PathTemplate {
 		if segment.Literal != nil {
@@ -693,7 +693,7 @@ func (c *rustCodec) derefFieldPath(fieldPath string) string {
 	return unwrap
 }
 
-func (c *rustCodec) httpPathArgs(h *api.PathInfo, state *api.APIState) []string {
+func (c *rustCodec) httpPathArgs(h *api.PathInfo) []string {
 	var args []string
 	for _, arg := range h.PathTemplate {
 		if arg.FieldPath != nil {
@@ -875,7 +875,7 @@ func (c *rustCodec) rustdocLink(link string, state *api.APIState) string {
 	}
 	e, ok := state.EnumByID[id]
 	if ok {
-		return c.fqEnumName(e, state)
+		return c.fqEnumName(e)
 	}
 	me, ok := state.MethodByID[id]
 	if ok {

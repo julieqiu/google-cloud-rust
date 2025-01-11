@@ -247,7 +247,7 @@ func newRustMessage(m *api.Message, c *rustCodec, state *api.APIState) *RustMess
 			return newRustEnum(s, c, state)
 		}),
 		MessageAttributes: c.messageAttributes(m, state),
-		Name:              c.messageName(m, state),
+		Name:              c.messageName(m),
 		QualifiedName:     c.fqMessageName(m, state),
 		NameSnakeCase:     c.toSnake(m.Name),
 		HasNestedTypes: func() bool {
@@ -273,12 +273,12 @@ func newRustMessage(m *api.Message, c *rustCodec, state *api.APIState) *RustMess
 
 func newRustMethod(m *api.Method, c *rustCodec, state *api.APIState) *RustMethod {
 	method := &RustMethod{
-		BodyAccessor:      c.bodyAccessor(m, state),
+		BodyAccessor:      c.bodyAccessor(m),
 		DocLines:          c.formatDocComments(m.Documentation, state),
 		HTTPMethod:        m.PathInfo.Verb,
 		HTTPMethodToLower: strings.ToLower(m.PathInfo.Verb),
-		HTTPPathArgs:      c.httpPathArgs(m.PathInfo, state),
-		HTTPPathFmt:       c.httpPathFmt(m.PathInfo, state),
+		HTTPPathArgs:      c.httpPathArgs(m.PathInfo),
+		HTTPPathFmt:       c.httpPathFmt(m.PathInfo),
 		HasBody:           m.PathInfo.BodyFieldPath != "",
 		InputTypeName:     c.methodInOutTypeName(m.InputTypeID, state),
 		NameToCamel:       strcase.ToCamel(m.Name),
@@ -333,14 +333,14 @@ func newRustField(field *api.Field, c *rustCodec, state *api.APIState) *RustFiel
 		FieldType:             c.nonPrimitiveFieldType(field, state),
 		PrimitiveFieldType:    c.primitiveFieldType(field, state),
 		JSONName:              field.JSONName,
-		AsQueryParameter:      c.asQueryParameter(field, state),
+		AsQueryParameter:      c.asQueryParameter(field),
 	}
 }
 
 func newRustEnum(e *api.Enum, c *rustCodec, state *api.APIState) *RustEnum {
 	return &RustEnum{
-		Name:          c.enumName(e, state),
-		NameSnakeCase: c.toSnake(c.enumName(e, state)),
+		Name:          c.enumName(e),
+		NameSnakeCase: c.toSnake(c.enumName(e)),
 		DocLines:      c.formatDocComments(e.Documentation, state),
 		Values: mapSlice(e.Values, func(s *api.EnumValue) *RustEnumValue {
 			return newRustEnumValue(s, e, c, state)
@@ -353,6 +353,6 @@ func newRustEnumValue(ev *api.EnumValue, e *api.Enum, c *rustCodec, state *api.A
 		DocLines: c.formatDocComments(ev.Documentation, state),
 		Name:     c.enumValueName(ev, state),
 		Number:   ev.Number,
-		EnumType: c.enumName(e, state),
+		EnumType: c.enumName(e),
 	}
 }

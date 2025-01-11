@@ -16,6 +16,7 @@ package language
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
@@ -50,7 +51,7 @@ func TestRust_ParseOptions(t *testing.T) {
 		"package:gax":           "package=gax,path=src/gax,feature=unstable-sdk-client",
 		"package:serde_with":    "package=serde_with,version=2.3.4,default-features=false",
 	}
-	codec, err := newRustCodec("", options)
+	got, err := newRustCodec("", options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,13 +90,19 @@ func TestRust_ParseOptions(t *testing.T) {
 			"test-only":       gp,
 		},
 	}
-	if diff := cmp.Diff(want, codec, cmp.AllowUnexported(rustCodec{}, rustPackage{})); diff != "" {
+	sort.Slice(want.extraPackages, func(i, j int) bool {
+		return want.extraPackages[i].name < want.extraPackages[j].name
+	})
+	sort.Slice(got.extraPackages, func(i, j int) bool {
+		return got.extraPackages[i].name < got.extraPackages[j].name
+	})
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(rustCodec{}, rustPackage{})); diff != "" {
 		t.Errorf("codec mismatch (-want, +got):\n%s", diff)
 	}
-	if want.packageNameOverride != codec.packageNameOverride {
-		t.Errorf("mismatched in packageNameOverride, want=%s, got=%s", want.packageNameOverride, codec.packageNameOverride)
+	if want.packageNameOverride != got.packageNameOverride {
+		t.Errorf("mismatched in packageNameOverride, want=%s, got=%s", want.packageNameOverride, got.packageNameOverride)
 	}
-	checkRustPackages(t, codec, want)
+	checkRustPackages(t, got, want)
 }
 
 func TestRust_RequiredPackages(t *testing.T) {
@@ -798,13 +805,13 @@ func TestRust_AsQueryParameter(t *testing.T) {
 	c.loadWellKnownTypes(api.State)
 
 	want := "&serde_json::to_value(&req.options_field).map_err(Error::serde)?"
-	got := c.asQueryParameter(optionsField, api.State)
+	got := c.asQueryParameter(optionsField)
 	if want != got {
 		t.Errorf("mismatched as query parameter for options_field, want=%s, got=%s", want, got)
 	}
 
 	want = "&req.another_field"
-	got = c.asQueryParameter(anotherField, api.State)
+	got = c.asQueryParameter(anotherField)
 	if want != got {
 		t.Errorf("mismatched as query parameter for another_field, want=%s, got=%s", want, got)
 	}
@@ -1262,14 +1269,14 @@ func TestRust_MessageNames(t *testing.T) {
 	if err := c.validate(api); err != nil {
 		t.Fatal(err)
 	}
-	if got := c.messageName(message, api.State); got != "Replication" {
+	if got := c.messageName(message); got != "Replication" {
 		t.Errorf("mismatched message name, got=%s, want=Replication", got)
 	}
 	if got := c.fqMessageName(message, api.State); got != "crate::model::Replication" {
 		t.Errorf("mismatched message name, got=%s, want=crate::model::Replication", got)
 	}
 
-	if got := c.messageName(nested, api.State); got != "Automatic" {
+	if got := c.messageName(nested); got != "Automatic" {
 		t.Errorf("mismatched message name, got=%s, want=Automatic", got)
 	}
 	if got := c.fqMessageName(nested, api.State); got != "crate::model::replication::Automatic" {
@@ -1311,13 +1318,13 @@ func TestRust_EnumNames(t *testing.T) {
 	if err := c.validate(api); err != nil {
 		t.Fatal(err)
 	}
-	if got := c.enumName(nested, api.State); got != "State" {
+	if got := c.enumName(nested); got != "State" {
 		t.Errorf("mismatched enum name, got=%s, want=Automatic", got)
 	}
-	if got := c.fqEnumName(nested, api.State); got != "crate::model::secret_version::State" {
+	if got := c.fqEnumName(nested); got != "crate::model::secret_version::State" {
 		t.Errorf("mismatched enum name, got=%s, want=crate::model::secret_version::State", got)
 	}
-	if got := c.fqEnumName(non_nested, api.State); got != "crate::model::Code" {
+	if got := c.fqEnumName(non_nested); got != "crate::model::Code" {
 		t.Errorf("mismatched enum name, got=%s, want=%s", got, "crate::model::Code")
 	}
 }

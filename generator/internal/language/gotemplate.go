@@ -109,7 +109,6 @@ type GoOneOf struct {
 	NameToPascal          string
 	NameToSnake           string
 	NameToSnakeNoMangling string
-	FieldType             string
 	DocLines              []string
 	Fields                []*GoField
 }
@@ -247,8 +246,8 @@ func newGoMessage(m *api.Message, c *goCodec, state *api.APIState) *GoMessage {
 			return newGoEnum(s, c, state)
 		}),
 		MessageAttributes: c.messageAttributes(m, state),
-		Name:              c.messageName(m, state),
-		QualifiedName:     c.fqMessageName(m, state),
+		Name:              c.messageName(m),
+		QualifiedName:     c.fqMessageName(m),
 		NameSnakeCase:     c.toSnake(m.Name),
 		HasNestedTypes: func() bool {
 			if len(m.Enums) > 0 || len(m.OneOfs) > 0 {
@@ -273,12 +272,12 @@ func newGoMessage(m *api.Message, c *goCodec, state *api.APIState) *GoMessage {
 
 func newGoMethod(m *api.Method, c *goCodec, state *api.APIState) *GoMethod {
 	method := &GoMethod{
-		BodyAccessor:      c.bodyAccessor(m, state),
+		BodyAccessor:      c.bodyAccessor(m),
 		DocLines:          c.formatDocComments(m.Documentation, state),
 		HTTPMethod:        m.PathInfo.Verb,
 		HTTPMethodToLower: strings.ToLower(m.PathInfo.Verb),
-		HTTPPathArgs:      c.httpPathArgs(m.PathInfo, state),
-		HTTPPathFmt:       c.httpPathFmt(m.PathInfo, state),
+		HTTPPathArgs:      c.httpPathArgs(m.PathInfo),
+		HTTPPathFmt:       c.httpPathFmt(m.PathInfo),
 		HasBody:           m.PathInfo.BodyFieldPath != "",
 		InputTypeName:     c.methodInOutTypeName(m.InputTypeID, state),
 		NameToCamel:       strcase.ToCamel(m.Name),
@@ -311,7 +310,6 @@ func newGoOneOf(oneOf *api.OneOf, c *goCodec, state *api.APIState) *GoOneOf {
 		NameToPascal:          c.toPascal(oneOf.Name),
 		NameToSnake:           c.toSnake(oneOf.Name),
 		NameToSnakeNoMangling: c.toSnakeNoMangling(oneOf.Name),
-		FieldType:             c.oneOfType(oneOf, state),
 		DocLines:              c.formatDocComments(oneOf.Documentation, state),
 		Fields: mapSlice(oneOf.Fields, func(field *api.Field) *GoField {
 			return newGoField(field, c, state)
@@ -339,8 +337,8 @@ func newGoField(field *api.Field, c *goCodec, state *api.APIState) *GoField {
 
 func newGoEnum(e *api.Enum, c *goCodec, state *api.APIState) *GoEnum {
 	return &GoEnum{
-		Name:          c.enumName(e, state),
-		NameSnakeCase: c.toSnake(c.enumName(e, state)),
+		Name:          c.enumName(e),
+		NameSnakeCase: c.toSnake(c.enumName(e)),
 		DocLines:      c.formatDocComments(e.Documentation, state),
 		Values: mapSlice(e.Values, func(s *api.EnumValue) *GoEnumValue {
 			return newGoEnumValue(s, e, c, state)
@@ -351,8 +349,8 @@ func newGoEnum(e *api.Enum, c *goCodec, state *api.APIState) *GoEnum {
 func newGoEnumValue(ev *api.EnumValue, e *api.Enum, c *goCodec, state *api.APIState) *GoEnumValue {
 	return &GoEnumValue{
 		DocLines: c.formatDocComments(ev.Documentation, state),
-		Name:     c.enumValueName(ev, state),
+		Name:     c.enumValueName(ev),
 		Number:   ev.Number,
-		EnumType: c.enumName(e, state),
+		EnumType: c.enumName(e),
 	}
 }

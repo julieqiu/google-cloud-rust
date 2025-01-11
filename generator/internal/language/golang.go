@@ -135,14 +135,14 @@ func (c *goCodec) fieldType(f *api.Field, state *api.APIState) string {
 			out = "map[" + key + "]" + val
 			break
 		}
-		out = "*" + c.messageName(m, state)
+		out = "*" + c.messageName(m)
 	case api.ENUM_TYPE:
 		e, ok := state.EnumByID[f.TypezID]
 		if !ok {
 			slog.Error("unable to lookup type", "id", f.TypezID)
 			return ""
 		}
-		out = c.enumName(e, state)
+		out = c.enumName(e)
 	default:
 		slog.Error("unhandled fieldType", "type", f.Typez, "id", f.TypezID)
 	}
@@ -187,9 +187,9 @@ func (*goCodec) messageAttributes(*api.Message, *api.APIState) []string {
 	return []string{}
 }
 
-func (c *goCodec) messageName(m *api.Message, state *api.APIState) string {
+func (c *goCodec) messageName(m *api.Message) string {
 	if m.Parent != nil {
-		return c.messageName(m.Parent, state) + "_" + strcase.ToCamel(m.Name)
+		return c.messageName(m.Parent) + "_" + strcase.ToCamel(m.Name)
 	}
 	if imp, ok := c.importMap[m.Package]; ok {
 		return imp.Name + "." + c.toPascal(m.Name)
@@ -197,37 +197,39 @@ func (c *goCodec) messageName(m *api.Message, state *api.APIState) string {
 	return c.toPascal(m.Name)
 }
 
-func (c *goCodec) fqMessageName(m *api.Message, state *api.APIState) string {
-	return c.messageName(m, state)
+func (c *goCodec) messageName2(m *api.Message, state *api.APIState) string {
+	if m.Parent != nil {
+		return c.messageName2(m.Parent, state) + "_" + strcase.ToCamel(m.Name)
+	}
+	if imp, ok := c.importMap[m.Package]; ok {
+		return imp.Name + "." + c.toPascal(m.Name)
+	}
+	return c.toPascal(m.Name)
 }
 
-func (c *goCodec) enumName(e *api.Enum, state *api.APIState) string {
+func (c *goCodec) fqMessageName(m *api.Message) string {
+	return c.messageName(m)
+}
+
+func (c *goCodec) enumName(e *api.Enum) string {
 	if e.Parent != nil {
-		return c.messageName(e.Parent, state) + "_" + strcase.ToCamel(e.Name)
+		return c.messageName(e.Parent) + "_" + strcase.ToCamel(e.Name)
 	}
 	return strcase.ToCamel(e.Name)
 }
 
 func (c *goCodec) fqEnumName(e *api.Enum, state *api.APIState) string {
-	return c.enumName(e, state)
+	return c.enumName(e)
 }
 
-func (c *goCodec) enumValueName(e *api.EnumValue, state *api.APIState) string {
+func (c *goCodec) enumValueName(e *api.EnumValue) string {
 	if e.Parent.Parent != nil {
-		return c.messageName(e.Parent.Parent, state) + "_" + strings.ToUpper(e.Name)
+		return c.messageName(e.Parent.Parent) + "_" + strings.ToUpper(e.Name)
 	}
 	return strings.ToUpper(e.Name)
 }
 
-func (c *goCodec) fqEnumValueName(v *api.EnumValue, state *api.APIState) string {
-	return c.enumValueName(v, state)
-}
-
-func (c *goCodec) oneOfType(o *api.OneOf, state *api.APIState) string {
-	panic("not needed for Go")
-}
-
-func (c *goCodec) bodyAccessor(m *api.Method, state *api.APIState) string {
+func (c *goCodec) bodyAccessor(m *api.Method) string {
 	if m.PathInfo.BodyFieldPath == "*" {
 		// no accessor needed, use the whole request
 		return ""
@@ -235,7 +237,7 @@ func (c *goCodec) bodyAccessor(m *api.Method, state *api.APIState) string {
 	return "." + strcase.ToCamel(m.PathInfo.BodyFieldPath)
 }
 
-func (c *goCodec) httpPathFmt(m *api.PathInfo, state *api.APIState) string {
+func (c *goCodec) httpPathFmt(m *api.PathInfo) string {
 	fmt := ""
 	for _, segment := range m.PathTemplate {
 		if segment.Literal != nil {
@@ -249,7 +251,7 @@ func (c *goCodec) httpPathFmt(m *api.PathInfo, state *api.APIState) string {
 	return fmt
 }
 
-func (c *goCodec) httpPathArgs(h *api.PathInfo, state *api.APIState) []string {
+func (c *goCodec) httpPathArgs(h *api.PathInfo) []string {
 	var args []string
 	// TODO(codyoss): https://github.com/googleapis/google-cloud-rust/issues/34
 	for _, segment := range h.PathTemplate {
