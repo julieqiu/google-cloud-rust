@@ -41,16 +41,18 @@ func GenerateClient(model *api.API, language, outdir string, options map[string]
 	)
 	switch language {
 	case "rust":
-		codec, err := newRustCodec(outdir, options)
+		var err error
+		data, generatedFiles, err = newRustTemplateData(model, options, outdir)
 		if err != nil {
 			return err
 		}
-		if err := codec.validate(model); err != nil {
-			return err
+		provider = func(name string) (string, error) {
+			contents, err := rustTemplates.ReadFile(name)
+			if err != nil {
+				return "", err
+			}
+			return string(contents), nil
 		}
-		data = newRustTemplateData(model, codec)
-		provider = codec.templatesProvider()
-		generatedFiles = codec.generatedFiles()
 	case "go":
 		var err error
 		data, err = newGoTemplateData(model, options)

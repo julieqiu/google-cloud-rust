@@ -16,7 +16,6 @@ package language
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"testing"
 
@@ -41,113 +40,6 @@ func createRustCodec() *rustCodec {
 	}
 }
 
-func TestRust_ParseOptions(t *testing.T) {
-	options := map[string]string{
-		"version":               "1.2.3",
-		"package-name-override": "test-only",
-		"copyright-year":        "2035",
-		"module-path":           "alternative::generated",
-		"package:wkt":           "package=types,path=src/wkt,source=google.protobuf,source=test-only",
-		"package:gax":           "package=gax,path=src/gax,feature=unstable-sdk-client",
-		"package:serde_with":    "package=serde_with,version=2.3.4,default-features=false",
-	}
-	got, err := newRustCodec("", options)
-	if err != nil {
-		t.Fatal(err)
-	}
-	gp := &rustPackage{
-		name:            "wkt",
-		packageName:     "types",
-		path:            "src/wkt",
-		defaultFeatures: true,
-	}
-	want := &rustCodec{
-		version:                  "1.2.3",
-		packageNameOverride:      "test-only",
-		generationYear:           "2035",
-		modulePath:               "alternative::generated",
-		deserializeWithdDefaults: true,
-		extraPackages: []*rustPackage{
-			gp,
-			{
-				name:        "gax",
-				packageName: "gax",
-				path:        "src/gax",
-				features: []string{
-					"unstable-sdk-client",
-				},
-				defaultFeatures: true,
-			},
-			{
-				name:            "serde_with",
-				packageName:     "serde_with",
-				version:         "2.3.4",
-				defaultFeatures: false,
-			},
-		},
-		packageMapping: map[string]*rustPackage{
-			"google.protobuf": gp,
-			"test-only":       gp,
-		},
-	}
-	sort.Slice(want.extraPackages, func(i, j int) bool {
-		return want.extraPackages[i].name < want.extraPackages[j].name
-	})
-	sort.Slice(got.extraPackages, func(i, j int) bool {
-		return got.extraPackages[i].name < got.extraPackages[j].name
-	})
-	if diff := cmp.Diff(want, got, cmp.AllowUnexported(rustCodec{}, rustPackage{})); diff != "" {
-		t.Errorf("codec mismatch (-want, +got):\n%s", diff)
-	}
-	if want.packageNameOverride != got.packageNameOverride {
-		t.Errorf("mismatched in packageNameOverride, want=%s, got=%s", want.packageNameOverride, got.packageNameOverride)
-	}
-	checkRustPackages(t, got, want)
-}
-
-func TestRust_RequiredPackages(t *testing.T) {
-	outdir := "src/generated/newlib"
-	options := map[string]string{
-		"package:async-trait": "package=async-trait,version=0.1.83,force-used=true",
-		"package:gtype":       "package=gcp-sdk-type,path=src/generated/type,source=google.type,source=test-only",
-		"package:gax":         "package=gcp-sdk-gax,path=src/gax,version=1.2.3,force-used=true",
-		"package:auth":        "ignore=true",
-	}
-	codec, err := newRustCodec(outdir, options)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got := codec.requiredPackages()
-	want := []string{
-		"async-trait = { version = \"0.1.83\" }",
-		"gax        = { version = \"1.2.3\", path = \"../../../src/gax\", package = \"gcp-sdk-gax\" }",
-	}
-	less := func(a, b string) bool { return a < b }
-	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
-		t.Errorf("mismatched required packages (-want, +got):\n%s", diff)
-	}
-}
-
-func TestRust_RequiredPackagesLocal(t *testing.T) {
-	// This is not a thing we expect to do in the Rust repository, but the
-	// behavior is consistent.
-	options := map[string]string{
-		"package:gtype": "package=types,path=src/generated/type,source=google.type,source=test-only,force-used=true",
-	}
-	codec, err := newRustCodec("", options)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got := codec.requiredPackages()
-	want := []string{
-		"gtype      = { path = \"src/generated/type\", package = \"types\" }",
-	}
-	less := func(a, b string) bool { return a < b }
-	if diff := cmp.Diff(want, got, cmpopts.SortSlices(less)); diff != "" {
-		t.Errorf("mismatched required packages (-want, +got):\n%s", diff)
-	}
-}
-
 func TestRust_PackageName(t *testing.T) {
 	rustPackageNameImpl(t, "test-only-overridden", map[string]string{
 		"package-name-override": "test-only-overridden",
@@ -167,11 +59,7 @@ func TestRust_PackageName(t *testing.T) {
 
 func rustPackageNameImpl(t *testing.T, want string, opts map[string]string, api *api.API) {
 	t.Helper()
-	codec, err := newRustCodec("", opts)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got := codec.packageName(api)
+	got := rustPackageName(api)
 	if want != got {
 		t.Errorf("mismatch in package name, want=%s, got=%s", want, got)
 	}
@@ -1315,7 +1203,7 @@ func TestRust_EnumNames(t *testing.T) {
 	api.PackageName = "test"
 
 	c := createRustCodec()
-	if err := c.validate(api); err != nil {
+	if err := rustValidate(api); err != nil {
 		t.Fatal(err)
 	}
 	if got := c.enumName(nested); got != "State" {

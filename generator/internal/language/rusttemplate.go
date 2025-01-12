@@ -15,7 +15,10 @@
 package language
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
 	"github.com/googleapis/google-cloud-rust/generator/internal/license"
@@ -146,8 +149,70 @@ type RustEnumValue struct {
 // Fields and methods defined in this struct directly correspond to Mustache
 // tags. For example, the Mustache tag {{#Services}} uses the
 // [Template.Services] field.
-func newRustTemplateData(model *api.API, c *rustCodec) *RustTemplateData {
-	c.loadWellKnownTypes(model.State)
+func newRustTemplateData(model *api.API, options map[string]string, outdir string) (*RustTemplateData, []GeneratedFile, error) {
+	year, _, _ := time.Now().Date()
+	c := &rustCodec{
+		generationYear:           fmt.Sprintf("%04d", year),
+		modulePath:               "model",
+		deserializeWithdDefaults: true,
+		extraPackages:            []*rustPackage{},
+		packageMapping:           map[string]*rustPackage{},
+		version:                  "0.0.0",
+	}
+	for key, definition := range options {
+		switch key {
+		case "package-name-override":
+			c.packageNameOverride = definition
+		case "generate-module":
+			value, err := strconv.ParseBool(definition)
+			if err != nil {
+				return nil, nil, fmt.Errorf("cannot convert `generate-module` value %q to boolean: %w", definition, err)
+			}
+			c.generateModule = value
+		case "module-path":
+			c.modulePath = definition
+		case "deserialize-with-defaults":
+			value, err := strconv.ParseBool(definition)
+			if err != nil {
+				return nil, nil, fmt.Errorf("cannot convert `deserialize-with-defaults` value %q to boolean: %w", definition, err)
+			}
+			c.deserializeWithdDefaults = value
+		case "copyright-year":
+			c.generationYear = definition
+		case "not-for-publication":
+			value, err := strconv.ParseBool(definition)
+			if err != nil {
+				return nil, nil, fmt.Errorf("cannot convert `not-for-publication` value %q to boolean: %w", definition, err)
+			}
+			c.doNotPublish = value
+		case "version":
+			c.version = definition
+		default:
+			if !strings.HasPrefix(key, "package:") {
+				return nil, nil, fmt.Errorf("unknown Rust codec option %q", key)
+			}
+
+			pkgOption, err := parseRustPackageOption(key, definition)
+			if err != nil {
+				return nil, nil, err
+			}
+			c.extraPackages = append(c.extraPackages, pkgOption.pkg)
+			for _, source := range pkgOption.otherNames {
+				c.packageMapping[source] = pkgOption.pkg
+			}
+		}
+	}
+	if err := rustValidate(model, c.sourceSpecificationPackageName); err != nil {
+		return nil, nil, err
+	}
+	for _, message := range rustWellKnown {
+		model.State.MessageByID[message.ID] = message
+	}
+	for _, pkg := range c.extraPackages {
+		if pkg.requiredByServices {
+			pkg.used = rustHasServices(model.State)
+		}
+	}
 	data := &RustTemplateData{
 		Name:           model.Name,
 		Title:          model.Title,
@@ -179,7 +244,7 @@ func newRustTemplateData(model *api.API, c *rustCodec) *RustTemplateData {
 	}
 	// Delay this until the Codec had a chance to compute what packages are
 	// used.
-	data.RequiredPackages = c.requiredPackages()
+	data.RequiredPackages = c.requiredPackages(outdir)
 	c.addStreamingFeature(data, model)
 
 	messagesByID := map[string]*RustMessage{}
@@ -195,7 +260,8 @@ func newRustTemplateData(model *api.API, c *rustCodec) *RustTemplateData {
 			}
 		}
 	}
-	return data
+
+	return data, rustGeneratedFiles(c.generateModule, model.State), nil
 }
 
 func newRustService(s *api.Service, c *rustCodec, state *api.APIState) *RustService {
@@ -355,4 +421,17 @@ func newRustEnumValue(ev *api.EnumValue, e *api.Enum, c *rustCodec, state *api.A
 		Number:   ev.Number,
 		EnumType: c.enumName(e),
 	}
+}
+
+func rustGeneratedFiles(generateModule bool, state *api.APIState) []GeneratedFile {
+	var root string
+	switch {
+	case generateModule:
+		root = "templates/rust/mod"
+	case rustHasServices(state):
+		root = "templates/rust/nosvc"
+	default:
+		root = "templates/rust/crate"
+	}
+	return walkTemplatesDir(rustTemplates, root)
 }

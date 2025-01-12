@@ -23,7 +23,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
@@ -64,61 +63,6 @@ var commentUrlRegex = regexp.MustCompile(
 		`([A-Za-z0-9\.]+\.)+` + // Be generous in accepting most of the authority (hostname)
 		`[a-zA-Z]{2,63}` + // The root domain is far more strict
 		`([-a-zA-Z0-9@:%_\+.~#?&/=]+)?`) // Accept just about anything on the query and URL fragments
-
-func newRustCodec(outdir string, options map[string]string) (*rustCodec, error) {
-	year, _, _ := time.Now().Date()
-	codec := &rustCodec{
-		generationYear:           fmt.Sprintf("%04d", year),
-		outputDirectory:          outdir,
-		modulePath:               "model",
-		deserializeWithdDefaults: true,
-		extraPackages:            []*rustPackage{},
-		packageMapping:           map[string]*rustPackage{},
-		version:                  "0.0.0",
-	}
-	for key, definition := range options {
-		switch {
-		case key == "package-name-override":
-			codec.packageNameOverride = definition
-		case key == "generate-module":
-			value, err := strconv.ParseBool(definition)
-			if err != nil {
-				return nil, fmt.Errorf("cannot convert `generate-module` value %q to boolean: %w", definition, err)
-			}
-			codec.generateModule = value
-		case key == "module-path":
-			codec.modulePath = definition
-		case key == "deserialize-with-defaults":
-			value, err := strconv.ParseBool(definition)
-			if err != nil {
-				return nil, fmt.Errorf("cannot convert `deserialize-with-defaults` value %q to boolean: %w", definition, err)
-			}
-			codec.deserializeWithdDefaults = value
-		case key == "copyright-year":
-			codec.generationYear = definition
-		case key == "not-for-publication":
-			value, err := strconv.ParseBool(definition)
-			if err != nil {
-				return nil, fmt.Errorf("cannot convert `not-for-publication` value %q to boolean: %w", definition, err)
-			}
-			codec.doNotPublish = value
-		case key == "version":
-			codec.version = definition
-		case strings.HasPrefix(key, "package:"):
-			pkgOption, err := parseRustPackageOption(key, definition)
-			if err != nil {
-				return nil, err
-			}
-			codec.extraPackages = append(codec.extraPackages, pkgOption.pkg)
-			for _, source := range pkgOption.otherNames {
-				codec.packageMapping[source] = pkgOption.pkg
-			}
-		default:
-			return nil, fmt.Errorf("unknown Rust codec option %q", key)
-		}
-	}
-	return codec, nil
-}
 
 type rustPackageOption struct {
 	pkg        *rustPackage
@@ -182,8 +126,6 @@ func parseRustPackageOption(key, definition string) (*rustPackageOption, error) 
 }
 
 type rustCodec struct {
-	// The output directory relative to the project root.
-	outputDirectory string
 	// Package name override. If not empty, overrides the default package name.
 	packageNameOverride string
 	// The year when the files were first generated.
@@ -215,8 +157,6 @@ type rustCodec struct {
 	doNotPublish bool
 	// The version of the generated crate.
 	version string
-	// True if the API model includes any services
-	hasServices bool
 }
 
 type rustPackage struct {
@@ -243,44 +183,11 @@ type rustPackage struct {
 	requiredByServices bool
 }
 
-func (c *rustCodec) loadWellKnownTypes(s *api.APIState) {
-	// TODO(#77) - replace these placeholders with real types
-	wellKnown := []*api.Message{
-		{
-			ID:      ".google.protobuf.Any",
-			Name:    "Any",
-			Package: "google.protobuf",
-		},
-		{
-			ID:      ".google.protobuf.Empty",
-			Name:    "Empty",
-			Package: "google.protobuf",
-		},
-		{
-			ID:      ".google.protobuf.FieldMask",
-			Name:    "FieldMask",
-			Package: "google.protobuf",
-		},
-		{
-			ID:      ".google.protobuf.Duration",
-			Name:    "Duration",
-			Package: "google.protobuf",
-		},
-		{
-			ID:      ".google.protobuf.Timestamp",
-			Name:    "Timestamp",
-			Package: "google.protobuf",
-		},
-	}
-	for _, message := range wellKnown {
-		s.MessageByID[message.ID] = message
-	}
-	c.hasServices = len(s.ServiceByID) > 0
-	for _, pkg := range c.extraPackages {
-		if pkg.requiredByServices {
-			pkg.used = c.hasServices
-		}
-	}
+func rustLoadWellKnownTypes(s *api.APIState) {
+}
+
+func rustHasServices(state *api.APIState) bool {
+	return len(state.ServiceByID) > 0
 }
 
 func scalarFieldType(f *api.Field) string {
@@ -511,29 +418,6 @@ func (c *rustCodec) asQueryParameter(f *api.Field) string {
 		return fmt.Sprintf("&serde_json::to_value(&req.%s).map_err(Error::serde)?", c.toSnake(f.Name))
 	}
 	return fmt.Sprintf("&req.%s", c.toSnake(f.Name))
-}
-
-func (c *rustCodec) templatesProvider() templateProvider {
-	return func(name string) (string, error) {
-		contents, err := rustTemplates.ReadFile(name)
-		if err != nil {
-			return "", err
-		}
-		return string(contents), nil
-	}
-}
-
-func (c *rustCodec) generatedFiles() []GeneratedFile {
-	var root string
-	switch {
-	case c.generateModule:
-		root = "templates/rust/mod"
-	case !c.hasServices:
-		root = "templates/rust/nosvc"
-	default:
-		root = "templates/rust/crate"
-	}
-	return walkTemplatesDir(rustTemplates, root)
 }
 
 func (c *rustCodec) methodInOutTypeName(id string, state *api.APIState) string {
@@ -967,12 +851,12 @@ func (c *rustCodec) serviceRustdocLink(s *api.Service, _ *api.APIState) string {
 	return fmt.Sprintf("crate::traits::%s", s.Name)
 }
 
-func (c *rustCodec) projectRoot() string {
-	if c.outputDirectory == "" {
+func (c *rustCodec) projectRoot(outdir string) string {
+	if outdir == "" {
 		return ""
 	}
 	rel := ".."
-	for range strings.Count(c.outputDirectory, "/") {
+	for range strings.Count(outdir, "/") {
 		rel = path.Join(rel, "..")
 	}
 	return rel
@@ -986,7 +870,7 @@ func (c *rustCodec) mapPackage(source string) (*rustPackage, bool) {
 	return mapped, ok
 }
 
-func (c *rustCodec) requiredPackages() []string {
+func (c *rustCodec) requiredPackages(outdir string) []string {
 	lines := []string{}
 	for _, pkg := range c.extraPackages {
 		if pkg.ignore {
@@ -1000,7 +884,7 @@ func (c *rustCodec) requiredPackages() []string {
 			components = append(components, fmt.Sprintf("version = %q", pkg.version))
 		}
 		if pkg.path != "" {
-			components = append(components, fmt.Sprintf("path = %q", path.Join(c.projectRoot(), pkg.path)))
+			components = append(components, fmt.Sprintf("path = %q", path.Join(c.projectRoot(outdir), pkg.path)))
 		}
 		if pkg.packageName != "" && pkg.name != pkg.packageName {
 			components = append(components, fmt.Sprintf("package = %q", pkg.packageName))
@@ -1026,9 +910,9 @@ func (c *rustCodec) packageVersion() string {
 	return c.version
 }
 
-func (c *rustCodec) packageName(api *api.API) string {
-	if len(c.packageNameOverride) > 0 {
-		return c.packageNameOverride
+func rustPackageName(api *api.API, packageNameOverride string) string {
+	if len(packageNameOverride) > 0 {
+		return packageNameOverride
 	}
 	name := strings.TrimPrefix(api.PackageName, "google.cloud.")
 	name = strings.TrimPrefix(name, "google.")
@@ -1039,8 +923,8 @@ func (c *rustCodec) packageName(api *api.API) string {
 	return "gcp-sdk-" + name
 }
 
-func (c *rustCodec) validatePackageName(newPackage, elementName string) error {
-	if c.sourceSpecificationPackageName == newPackage {
+func rustValidatePackageName(newPackage, elementName, sourceSpecificationPackageName string) error {
+	if sourceSpecificationPackageName == newPackage {
 		return nil
 	}
 	// Special exceptions for mixin services
@@ -1050,30 +934,30 @@ func (c *rustCodec) validatePackageName(newPackage, elementName string) error {
 		return nil
 	}
 	return fmt.Errorf("rust codec requires all top-level elements to be in the same package want=%s, got=%s for %s",
-		c.sourceSpecificationPackageName, newPackage, elementName)
+		sourceSpecificationPackageName, newPackage, elementName)
 }
 
-func (c *rustCodec) validate(api *api.API) error {
+func rustValidate(api *api.API, sourceSpecificationPackageName string) error {
 	// Set the source package. We should always take the first service registered
 	// as the source package. Services with mixins will register those after the
 	// source package.
 	if len(api.Services) > 0 {
-		c.sourceSpecificationPackageName = api.Services[0].Package
+		sourceSpecificationPackageName = api.Services[0].Package
 	} else if len(api.Messages) > 0 {
-		c.sourceSpecificationPackageName = api.Messages[0].Package
+		sourceSpecificationPackageName = api.Messages[0].Package
 	}
 	for _, s := range api.Services {
-		if err := c.validatePackageName(s.Package, s.ID); err != nil {
+		if err := rustValidatePackageName(s.Package, s.ID, sourceSpecificationPackageName); err != nil {
 			return err
 		}
 	}
 	for _, s := range api.Messages {
-		if err := c.validatePackageName(s.Package, s.ID); err != nil {
+		if err := rustValidatePackageName(s.Package, s.ID, sourceSpecificationPackageName); err != nil {
 			return err
 		}
 	}
 	for _, s := range api.Enums {
-		if err := c.validatePackageName(s.Package, s.ID); err != nil {
+		if err := rustValidatePackageName(s.Package, s.ID, sourceSpecificationPackageName); err != nil {
 			return err
 		}
 	}
@@ -1187,6 +1071,35 @@ func rustEscapeKeyword(symbol string) string {
 		return symbol
 	}
 	return "r#" + symbol
+}
+
+// TODO(#77) - replace these placeholders with real types
+var rustWellKnown = []*api.Message{
+	{
+		ID:      ".google.protobuf.Any",
+		Name:    "Any",
+		Package: "google.protobuf",
+	},
+	{
+		ID:      ".google.protobuf.Empty",
+		Name:    "Empty",
+		Package: "google.protobuf",
+	},
+	{
+		ID:      ".google.protobuf.FieldMask",
+		Name:    "FieldMask",
+		Package: "google.protobuf",
+	},
+	{
+		ID:      ".google.protobuf.Duration",
+		Name:    "Duration",
+		Package: "google.protobuf",
+	},
+	{
+		ID:      ".google.protobuf.Timestamp",
+		Name:    "Timestamp",
+		Package: "google.protobuf",
+	},
 }
 
 func mapSlice[T, R any](s []T, f func(T) R) []R {
