@@ -243,7 +243,7 @@ type rustPackage struct {
 	requiredByServices bool
 }
 
-func (c *rustCodec) loadWellKnownTypes(s *api.APIState) {
+func rustLoadWellKnownTypes(s *api.APIState, extraPackages []*rustPackage) {
 	// TODO(#77) - replace these placeholders with real types
 	wellKnown := []*api.Message{
 		{
@@ -274,12 +274,6 @@ func (c *rustCodec) loadWellKnownTypes(s *api.APIState) {
 	}
 	for _, message := range wellKnown {
 		s.MessageByID[message.ID] = message
-	}
-	c.hasServices = len(s.ServiceByID) > 0
-	for _, pkg := range c.extraPackages {
-		if pkg.requiredByServices {
-			pkg.used = c.hasServices
-		}
 	}
 }
 
@@ -324,7 +318,7 @@ func scalarFieldType(f *api.Field) string {
 	return out
 }
 
-func (c *rustCodec) fieldFormatter(typez api.Typez) string {
+func rustFieldFormatter(typez api.Typez) string {
 	switch typez {
 	case api.INT64_TYPE,
 		api.UINT64_TYPE,
@@ -339,7 +333,7 @@ func (c *rustCodec) fieldFormatter(typez api.Typez) string {
 	}
 }
 
-func (c *rustCodec) fieldSkipAttributes(f *api.Field) []string {
+func rustFieldSkipAttributes(f *api.Field) []string {
 	switch f.Typez {
 	case api.STRING_TYPE:
 		return []string{`#[serde(skip_serializing_if = "String::is_empty")]`}
@@ -350,14 +344,14 @@ func (c *rustCodec) fieldSkipAttributes(f *api.Field) []string {
 	}
 }
 
-func (c *rustCodec) fieldBaseAttributes(f *api.Field) []string {
+func rustFieldBaseAttributes(f *api.Field) []string {
 	if c.toCamel(c.toSnake(f.Name)) != f.JSONName {
 		return []string{fmt.Sprintf(`#[serde(rename = "%s")]`, f.JSONName)}
 	}
 	return []string{}
 }
 
-func (c *rustCodec) wrapperFieldAttributes(f *api.Field, attributes []string) []string {
+func rustWrapperFieldAttributes(f *api.Field, attributes []string) []string {
 	// Message fields could be `Vec<..>`, and are always optional:
 	if f.Optional {
 		attributes = append(attributes, `#[serde(skip_serializing_if = "Option::is_none")]`)
@@ -383,7 +377,7 @@ func (c *rustCodec) wrapperFieldAttributes(f *api.Field, attributes []string) []
 		fmt.Sprintf(`#[serde_as(as = "Option<%s>")]`, formatter))
 }
 
-func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string {
+func rustFieldAttributes(f *api.Field, state *api.APIState) []string {
 	if f.Synthetic {
 		return []string{`#[serde(skip)]`}
 	}
@@ -459,15 +453,7 @@ func (c *rustCodec) fieldAttributes(f *api.Field, state *api.APIState) []string 
 	}
 }
 
-func (c *rustCodec) nonPrimitiveFieldType(f *api.Field, state *api.APIState) string {
-	return c.fieldType(f, state, false)
-}
-
-func (c *rustCodec) primitiveFieldType(f *api.Field, state *api.APIState) string {
-	return c.fieldType(f, state, true)
-}
-
-func (c *rustCodec) fieldType(f *api.Field, state *api.APIState, primitive bool) string {
+func rustFieldType(f *api.Field, state *api.APIState, primitive bool) string {
 	if !primitive && f.IsOneOf {
 		return fmt.Sprintf("(%s)", c.baseFieldType(f, state))
 	}
@@ -481,7 +467,7 @@ func (c *rustCodec) fieldType(f *api.Field, state *api.APIState, primitive bool)
 }
 
 // Returns the field type, ignoring any repeated or optional attributes.
-func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
+func rustBaseFieldType(f *api.Field, state *api.APIState) string {
 	if f.Typez == api.MESSAGE_TYPE {
 		m, ok := state.MessageByID[f.TypezID]
 		if !ok {
@@ -489,8 +475,8 @@ func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
 			return ""
 		}
 		if m.IsMap {
-			key := c.nonPrimitiveFieldType(m.Fields[0], state)
-			val := c.nonPrimitiveFieldType(m.Fields[1], state)
+			key := c.fieldType(m.Fields[0], state, false)
+			val := c.fieldType(m.Fields[1], state, false)
 			return "std::collections::HashMap<" + key + "," + val + ">"
 		}
 		return c.fqMessageName(m, state)
@@ -509,7 +495,7 @@ func (c *rustCodec) baseFieldType(f *api.Field, state *api.APIState) string {
 
 }
 
-func (c *rustCodec) asQueryParameter(f *api.Field) string {
+func rustAsQueryParameter(f *api.Field) string {
 	if f.Typez == api.MESSAGE_TYPE {
 		// Query parameters in nested messages are first converted to a
 		// `serde_json::Value`` and then recursively merged into the request
@@ -521,7 +507,7 @@ func (c *rustCodec) asQueryParameter(f *api.Field) string {
 	return fmt.Sprintf("&req.%s", c.toSnake(f.Name))
 }
 
-func (c *rustCodec) templatesProvider() templateProvider {
+func rustTemplatesProvider() templateProvider {
 	return func(name string) (string, error) {
 		contents, err := rustTemplates.ReadFile(name)
 		if err != nil {
@@ -531,12 +517,19 @@ func (c *rustCodec) templatesProvider() templateProvider {
 	}
 }
 
-func (c *rustCodec) generatedFiles() []GeneratedFile {
+func rustGeneratedFiles() []GeneratedFile {
+	hasServices = len(s.ServiceByID) > 0
+	for _, pkg := range extraPackages {
+		if pkg.requiredByServices {
+			pkg.used = c.hasServices
+		}
+	}
+
 	var root string
 	switch {
 	case c.generateModule:
 		root = "templates/rust/mod"
-	case !c.hasServices:
+	case !hasServices:
 		root = "templates/rust/nosvc"
 	default:
 		root = "templates/rust/crate"
@@ -544,7 +537,7 @@ func (c *rustCodec) generatedFiles() []GeneratedFile {
 	return walkTemplatesDir(rustTemplates, root)
 }
 
-func (c *rustCodec) methodInOutTypeName(id string, state *api.APIState) string {
+func rustMethodInOutTypeName(id string, state *api.APIState) string {
 	if id == "" {
 		return ""
 	}
@@ -556,7 +549,7 @@ func (c *rustCodec) methodInOutTypeName(id string, state *api.APIState) string {
 	return c.fqMessageName(m, state)
 }
 
-func (c *rustCodec) rustPackage(packageName string) string {
+func rustRustPackage(packageName string) string {
 	if packageName == c.sourceSpecificationPackageName {
 		return "crate::" + c.modulePath
 	}
@@ -571,7 +564,7 @@ func (c *rustCodec) rustPackage(packageName string) string {
 	return mapped.name + "::model"
 }
 
-func (c *rustCodec) messageAttributes(*api.Message, *api.APIState) []string {
+func rustMessageAttributes(*api.Message, *api.APIState) []string {
 	serde := `#[serde(default, rename_all = "camelCase")]`
 	if !c.deserializeWithdDefaults {
 		serde = `#[serde(rename_all = "camelCase")]`
@@ -584,11 +577,11 @@ func (c *rustCodec) messageAttributes(*api.Message, *api.APIState) []string {
 	}
 }
 
-func (c *rustCodec) messageName(m *api.Message) string {
+func rustMessageName(m *api.Message) string {
 	return c.toPascal(m.Name)
 }
 
-func (c *rustCodec) messageScopeName(m *api.Message, childPackageName string) string {
+func rustMessageScopeName(m *api.Message, childPackageName string) string {
 	if m == nil {
 		return c.rustPackage(childPackageName)
 	}
@@ -598,37 +591,37 @@ func (c *rustCodec) messageScopeName(m *api.Message, childPackageName string) st
 	return c.messageScopeName(m.Parent, m.Package) + "::" + c.toSnake(m.Name)
 }
 
-func (c *rustCodec) enumScopeName(e *api.Enum) string {
+func rustEnumScopeName(e *api.Enum) string {
 	return c.messageScopeName(e.Parent, e.Package)
 }
 
-func (c *rustCodec) fqMessageName(m *api.Message, _ *api.APIState) string {
+func rustFqMessageName(m *api.Message, _ *api.APIState) string {
 	return c.messageScopeName(m.Parent, m.Package) + "::" + c.toPascal(m.Name)
 }
 
-func (c *rustCodec) enumName(e *api.Enum) string {
+func rustEnumName(e *api.Enum) string {
 	return c.toPascal(e.Name)
 }
 
-func (c *rustCodec) fqEnumName(e *api.Enum) string {
+func rustFqEnumName(e *api.Enum) string {
 	return c.messageScopeName(e.Parent, e.Package) + "::" + c.toPascal(e.Name)
 }
 
-func (c *rustCodec) enumValueName(e *api.EnumValue, _ *api.APIState) string {
+func rustEnumValueName(e *api.EnumValue, _ *api.APIState) string {
 	// The Protobuf naming convention is to use SCREAMING_SNAKE_CASE, we do not
 	// need to change anything for Rust
 	return rustEscapeKeyword(e.Name)
 }
 
-func (c *rustCodec) fqEnumValueName(v *api.EnumValue, state *api.APIState) string {
+func rustFqEnumValueName(v *api.EnumValue, state *api.APIState) string {
 	return fmt.Sprintf("%s::%s::%s", c.enumScopeName(v.Parent), c.toSnake(v.Parent.Name), c.enumValueName(v, state))
 }
 
-func (c *rustCodec) oneOfType(o *api.OneOf, _ *api.APIState) string {
+func rustOneOfType(o *api.OneOf, _ *api.APIState) string {
 	return c.messageScopeName(o.Parent, "") + "::" + c.toPascal(o.Name)
 }
 
-func (c *rustCodec) bodyAccessor(m *api.Method) string {
+func rustBodyAccessor(m *api.Method) string {
 	if m.PathInfo.BodyFieldPath == "*" {
 		// no accessor needed, use the whole request
 		return ""
@@ -636,7 +629,7 @@ func (c *rustCodec) bodyAccessor(m *api.Method) string {
 	return "." + c.toSnake(m.PathInfo.BodyFieldPath)
 }
 
-func (c *rustCodec) httpPathFmt(m *api.PathInfo) string {
+func rustHTTPPathFmt(m *api.PathInfo) string {
 	fmt := ""
 	for _, segment := range m.PathTemplate {
 		if segment.Literal != nil {
@@ -678,26 +671,26 @@ func (c *rustCodec) httpPathFmt(m *api.PathInfo) string {
 // ```
 //
 // and so on.
-func (c *rustCodec) unwrapFieldPath(components []string, requestAccess string) (string, string) {
+func rustUnwrapFieldPath(components []string, requestAccess string) (string, string) {
 	if len(components) == 1 {
 		return requestAccess + "." + c.toSnake(components[0]), components[0]
 	}
-	unwrap, name := c.unwrapFieldPath(components[0:len(components)-1], "&req")
+	unwrap, name := rustUnwrapFieldPath(components[0:len(components)-1], "&req")
 	last := components[len(components)-1]
 	return fmt.Sprintf("gax::path_parameter::PathParameter::required(%s, \"%s\").map_err(Error::other)?.%s", unwrap, name, last), ""
 }
 
-func (c *rustCodec) derefFieldPath(fieldPath string) string {
+func rustDerefFieldPath(fieldPath string) string {
 	components := strings.Split(fieldPath, ".")
-	unwrap, _ := c.unwrapFieldPath(components, "req")
+	unwrap, _ := rustUnwrapFieldPath(components, "req")
 	return unwrap
 }
 
-func (c *rustCodec) httpPathArgs(h *api.PathInfo) []string {
+func rustHTTPPathArgs(h *api.PathInfo) []string {
 	var args []string
 	for _, arg := range h.PathTemplate {
 		if arg.FieldPath != nil {
-			args = append(args, c.derefFieldPath(*arg.FieldPath))
+			args = append(args, rustDerefFieldPath(*arg.FieldPath))
 		}
 	}
 	return args
@@ -709,11 +702,11 @@ func (c *rustCodec) httpPathArgs(h *api.PathInfo) []string {
 // This type of conversion can easily introduce keywords. Consider
 //
 //	`toSnake("True") -> "true"`
-func (c *rustCodec) toSnake(symbol string) string {
-	return rustEscapeKeyword(c.toSnakeNoMangling(symbol))
+func rustToSnake(symbol string) string {
+	return rustEscapeKeyword(rustToSnakeNoMangling(symbol))
 }
 
-func (*rustCodec) toSnakeNoMangling(symbol string) string {
+func rustToSnakeNoMangling(symbol string) string {
 	if strings.ToLower(symbol) == symbol {
 		return symbol
 	}
@@ -755,7 +748,7 @@ func (*rustCodec) toCamel(symbol string) string {
 // difficult examples.
 //
 // [spec]: https://spec.commonmark.org/0.13/#block-quotes
-func (c *rustCodec) formatDocComments(documentation string, state *api.APIState) []string {
+func rustFormatDocComments(documentation string, state *api.APIState) []string {
 	inBlockquote := false
 	blockquotePrefix := ""
 
@@ -867,7 +860,7 @@ func (c *rustCodec) formatDocComments(documentation string, state *api.APIState)
 	return results
 }
 
-func (c *rustCodec) rustdocLink(link string, state *api.APIState) string {
+func rustRustdocLink(link string, state *api.APIState) string {
 	id := fmt.Sprintf(".%s", link)
 	m, ok := state.MessageByID[id]
 	if ok {
@@ -896,7 +889,7 @@ func (c *rustCodec) rustdocLink(link string, state *api.APIState) string {
 	return ""
 }
 
-func (c *rustCodec) tryFieldRustdocLink(id string, state *api.APIState) string {
+func rustTryFieldRustdocLink(id string, state *api.APIState) string {
 	idx := strings.LastIndex(id, ".")
 	if idx == -1 {
 		return ""
@@ -919,7 +912,7 @@ func (c *rustCodec) tryFieldRustdocLink(id string, state *api.APIState) string {
 	return ""
 }
 
-func (c *rustCodec) tryOneOfRustdocLink(field *api.Field, message *api.Message, state *api.APIState) string {
+func rustTryOneOfRustdocLink(field *api.Field, message *api.Message, state *api.APIState) string {
 	for _, o := range message.OneOfs {
 		for _, f := range o.Fields {
 			if f.ID == field.ID {
@@ -930,7 +923,7 @@ func (c *rustCodec) tryOneOfRustdocLink(field *api.Field, message *api.Message, 
 	return ""
 }
 
-func (c *rustCodec) tryEnumValueRustdocLink(id string, state *api.APIState) string {
+func rustTryEnumValueRustdocLink(id string, state *api.APIState) string {
 	idx := strings.LastIndex(id, ".")
 	if idx == -1 {
 		return ""
@@ -949,7 +942,7 @@ func (c *rustCodec) tryEnumValueRustdocLink(id string, state *api.APIState) stri
 	return ""
 }
 
-func (c *rustCodec) methodRustdocLink(m *api.Method, state *api.APIState) string {
+func rustMethodRustdocLink(m *api.Method, state *api.APIState) string {
 	// Sometimes we remove methods from a service. In that case we cannot
 	// reference the method.
 	if !c.generateMethod(m) {
@@ -975,7 +968,7 @@ func (c *rustCodec) serviceRustdocLink(s *api.Service, _ *api.APIState) string {
 	return fmt.Sprintf("crate::traits::%s", s.Name)
 }
 
-func (c *rustCodec) projectRoot() string {
+func rustProjectRoot() string {
 	if c.outputDirectory == "" {
 		return ""
 	}
@@ -986,7 +979,7 @@ func (c *rustCodec) projectRoot() string {
 	return rel
 }
 
-func (c *rustCodec) mapPackage(source string) (*rustPackage, bool) {
+func rustMapPackage(source string) (*rustPackage, bool) {
 	mapped, ok := c.packageMapping[source]
 	if ok {
 		mapped.used = true
@@ -994,9 +987,9 @@ func (c *rustCodec) mapPackage(source string) (*rustPackage, bool) {
 	return mapped, ok
 }
 
-func (c *rustCodec) requiredPackages() []string {
+func rustRequiredPackages(extraPackage []*rustPackage) []string {
 	lines := []string{}
-	for _, pkg := range c.extraPackages {
+	for _, pkg := range extraPackages {
 		if pkg.ignore {
 			continue
 		}
@@ -1026,19 +1019,7 @@ func (c *rustCodec) requiredPackages() []string {
 	return lines
 }
 
-func (c *rustCodec) copyrightYear() string {
-	return c.generationYear
-}
-
-func (c *rustCodec) packageVersion() string {
-	return c.version
-}
-
-func (c *rustCodec) sourcePackageName() string {
-	return c.sourceSpecificationPackageName
-}
-
-func (c *rustCodec) packageName(api *api.API) string {
+func rustPackageName(api *api.API) string {
 	if len(c.packageNameOverride) > 0 {
 		return c.packageNameOverride
 	}
@@ -1051,8 +1032,8 @@ func (c *rustCodec) packageName(api *api.API) string {
 	return "gcp-sdk-" + name
 }
 
-func (c *rustCodec) validatePackageName(newPackage, elementName string) error {
-	if c.sourceSpecificationPackageName == newPackage {
+func rustValidatePackageName(newPackage, elementName, sourceSpecificationPackageName string) error {
+	if sourceSpecificationPackageName == newPackage {
 		return nil
 	}
 	// Special exceptions for mixin services
@@ -1062,49 +1043,37 @@ func (c *rustCodec) validatePackageName(newPackage, elementName string) error {
 		return nil
 	}
 	return fmt.Errorf("rust codec requires all top-level elements to be in the same package want=%s, got=%s for %s",
-		c.sourceSpecificationPackageName, newPackage, elementName)
+		sourceSpecificationPackageName, newPackage, elementName)
 }
 
-func (c *rustCodec) validate(api *api.API) error {
+func rustValidate(api *api.API, sourceSpecificationPackageName string) error {
 	// Set the source package. We should always take the first service registered
 	// as the source package. Services with mixins will register those after the
 	// source package.
 	if len(api.Services) > 0 {
-		c.sourceSpecificationPackageName = api.Services[0].Package
+		sourceSpecificationPackageName = api.Services[0].Package
 	} else if len(api.Messages) > 0 {
-		c.sourceSpecificationPackageName = api.Messages[0].Package
+		sourceSpecificationPackageName = api.Messages[0].Package
 	}
 	for _, s := range api.Services {
-		if err := c.validatePackageName(s.Package, s.ID); err != nil {
+		if err := rustValidatePackageName(s.Package, s.ID, sourceSpecificationPackageName); err != nil {
 			return err
 		}
 	}
 	for _, s := range api.Messages {
-		if err := c.validatePackageName(s.Package, s.ID); err != nil {
+		if err := rustValidatePackageName(s.Package, s.ID, sourceSpecificationPackageName); err != nil {
 			return err
 		}
 	}
 	for _, s := range api.Enums {
-		if err := c.validatePackageName(s.Package, s.ID); err != nil {
+		if err := rustValidatePackageName(s.Package, s.ID, sourceSpecificationPackageName); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// rustContext contains Rust specific data that can be referenced in templates.
-type rustContext struct {
-	HasFeatures bool
-	Features    []string
-}
-
-func (c *rustCodec) additionalContext(api *api.API) any {
-	rustContext := &rustContext{}
-	c.addStreamingFeature(rustContext, api)
-	return rustContext
-}
-
-func (c *rustCodec) addStreamingFeature(rustContext *rustContext, api *api.API) {
+func rustAddStreamingFeature(data *RustTemplateData, api *api.API, extraPackages []*rustPackage) {
 	var hasStreamingRPC bool
 	for _, m := range api.Messages {
 		if m.IsPageableResponse {
@@ -1118,7 +1087,7 @@ func (c *rustCodec) addStreamingFeature(rustContext *rustContext, api *api.API) 
 	var sb strings.Builder
 	sb.WriteString(`unstable-stream = ["gax/unstable-stream"`)
 	// Add streaming feature for deps
-	for _, p := range c.extraPackages {
+	for _, p := range extraPackages {
 		if p.ignore || !p.used {
 			continue
 		}
@@ -1127,19 +1096,11 @@ func (c *rustCodec) addStreamingFeature(rustContext *rustContext, api *api.API) 
 		}
 	}
 	sb.WriteString("]")
-	rustContext.Features = append(rustContext.Features, sb.String())
-	rustContext.HasFeatures = true
+	data.Features = append(data.Features, sb.String())
+	data.HasFeatures = true
 }
 
-func (c *rustCodec) imports() []string {
-	return nil
-}
-
-func (c *rustCodec) notForPublication() bool {
-	return c.doNotPublish
-}
-
-func (c *rustCodec) generateMethod(m *api.Method) bool {
+func rustGenerateMethod(m *api.Method) bool {
 	// Ignore methods without HTTP annotations, we cannot generate working
 	// RPCs for them.
 	// TODO(#499) - switch to explicitly excluding such functions. Easier to
