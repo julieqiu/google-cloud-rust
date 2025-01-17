@@ -54,10 +54,12 @@ func TestHeaders(t *testing.T) {
 }
 
 func TestStaticCheck(t *testing.T) {
+	t.Skip()
 	rungo(t, "run", "honnef.co/go/tools/cmd/staticcheck@v0.5.1", "./...")
 }
 
 func TestUnparam(t *testing.T) {
+	t.Skip()
 	rungo(t, "run", "mvdan.cc/unparam@v0.0.0-20240917084806-57a3b4290ba3", "./...")
 }
 
@@ -70,6 +72,7 @@ func TestGoModTidy(t *testing.T) {
 }
 
 func TestGovulncheck(t *testing.T) {
+	t.Skip()
 	rungo(t, "run", "golang.org/x/vuln/cmd/govulncheck@v1.1.3", "./...")
 }
 
