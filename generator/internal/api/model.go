@@ -112,7 +112,7 @@ type Method struct {
 	// [AIP-4233](https://google.aip.dev/client-libraries/4233).
 	IsPageable bool
 	// The service that contains this method.
-	Parent *Service
+	// Parent *Service
 	// The streaming attributes of the method. Bidi streaming methods have both
 	// set to true.
 	ClientSideStreaming bool

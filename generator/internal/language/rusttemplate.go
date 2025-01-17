@@ -244,7 +244,7 @@ func newRustService(s *api.Service, state *api.APIState, modulePath, sourceSpeci
 	}
 	return &RustService{
 		Methods: mapSlice(methods, func(m *api.Method) *RustMethod {
-			return newRustMethod(m, state, modulePath, sourceSpecificationPackageName, packageMapping, packageNamespace)
+			return newRustMethod(m, s, state, modulePath, sourceSpecificationPackageName, packageMapping, packageNamespace)
 		}),
 		NameToSnake:         rustToSnake(s.Name),
 		NameToPascal:        rustToPascal(s.Name),
@@ -311,7 +311,7 @@ func newRustMessage(m *api.Message, state *api.APIState, deserializeWithDefaults
 	}
 }
 
-func newRustMethod(m *api.Method, state *api.APIState, modulePath, sourceSpecificationPackageName string, packageMapping map[string]*rustPackage, packageNamespace string) *RustMethod {
+func newRustMethod(m *api.Method, s *api.Service, state *api.APIState, modulePath, sourceSpecificationPackageName string, packageMapping map[string]*rustPackage, packageNamespace string) *RustMethod {
 	method := &RustMethod{
 		BodyAccessor:      rustBodyAccessor(m),
 		DocLines:          rustFormatDocComments(m.Documentation, state, modulePath, sourceSpecificationPackageName, packageMapping),
@@ -332,9 +332,9 @@ func newRustMethod(m *api.Method, state *api.APIState, modulePath, sourceSpecifi
 			return newRustField(s, state, modulePath, sourceSpecificationPackageName, packageMapping)
 		}),
 		IsPageable:          m.IsPageable,
-		ServiceNameToPascal: rustToPascal(m.Parent.Name),
-		ServiceNameToCamel:  rustToCamel(m.Parent.Name),
-		ServiceNameToSnake:  rustToSnake(m.Parent.Name),
+		ServiceNameToPascal: rustToPascal(s.Name),
+		ServiceNameToCamel:  rustToCamel(s.Name),
+		ServiceNameToSnake:  rustToSnake(s.Name),
 		InputTypeID:         m.InputTypeID,
 	}
 	if m.OperationInfo != nil {
