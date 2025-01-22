@@ -278,7 +278,8 @@ func newRustMessage(m *api.Message, state *api.APIState, deserializeWithDefaults
 			})
 		}(),
 		ExplicitOneOfs: mapSlice(m.OneOfs, func(s *api.OneOf) *RustOneOf {
-			return newRustOneOf(s, state, modulePath, sourceSpecificationPackageName, packageMapping)
+			messageName := rustMessageScopeName(m, m.Package, modulePath, sourceSpecificationPackageName, packageMapping)
+			return newRustOneOf(messageName, s, state, modulePath, sourceSpecificationPackageName, packageMapping)
 		}),
 		NestedMessages: mapSlice(m.Messages, func(s *api.Message) *RustMessage {
 			return newRustMessage(s, state, deserializeWithDefaults, modulePath, sourceSpecificationPackageName, packageMapping)
@@ -351,12 +352,12 @@ func newRustMethod(m *api.Method, s *api.Service, state *api.APIState, modulePat
 	return method
 }
 
-func newRustOneOf(oneOf *api.OneOf, state *api.APIState, modulePath, sourceSpecificationPackageName string, packageMapping map[string]*rustPackage) *RustOneOf {
+func newRustOneOf(messageName string, oneOf *api.OneOf, state *api.APIState, modulePath, sourceSpecificationPackageName string, packageMapping map[string]*rustPackage) *RustOneOf {
 	return &RustOneOf{
 		NameToPascal:          rustToPascal(oneOf.Name),
 		NameToSnake:           rustToSnake(oneOf.Name),
 		NameToSnakeNoMangling: rustToSnakeNoMangling(oneOf.Name),
-		FieldType:             rustOneOfType(oneOf, modulePath, sourceSpecificationPackageName, packageMapping),
+		FieldType:             rustOneOfType(oneOf, messageName),
 		DocLines:              rustFormatDocComments(oneOf.Documentation, state, modulePath, sourceSpecificationPackageName, packageMapping),
 		Fields: mapSlice(oneOf.Fields, func(field *api.Field) *RustField {
 			return newRustField(field, state, modulePath, sourceSpecificationPackageName, packageMapping)
