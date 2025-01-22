@@ -21,8 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/google-cloud-rust/generator/internal/api"
-	"google.golang.org/genproto/googleapis/api/serviceconfig"
-	"google.golang.org/protobuf/types/known/apipb"
+	"github.com/googleapis/google-cloud-rust/generator/internal/sample"
 )
 
 func TestOpenAPI_AllOf(t *testing.T) {
@@ -64,7 +63,8 @@ func TestOpenAPI_AllOf(t *testing.T) {
 		t.Fatalf("Error in makeAPI() %q", err)
 	}
 
-	message := test.State.MessageByID["..Automatic"]
+	want := sample.Automatic()
+	message := test.State.MessageByID[want.ID]
 	if message == nil {
 		t.Errorf("missing message in MessageByID index")
 		return
@@ -133,7 +133,7 @@ func TestOpenAPI_BasicTypes(t *testing.T) {
 		t.Errorf("missing message in MessageByID index")
 		return
 	}
-	checkMessage(t, *message, api.Message{
+	checkMessage(t, message, &api.Message{
 		Name:          "Fake",
 		ID:            "..Fake",
 		Documentation: "A test message.",
@@ -265,7 +265,7 @@ func TestOpenAPI_ArrayTypes(t *testing.T) {
 		t.Errorf("missing message in MessageByID index")
 		return
 	}
-	checkMessage(t, *message, api.Message{
+	checkMessage(t, message, &api.Message{
 		Name:          "Fake",
 		ID:            "..Fake",
 		Documentation: "A test message.",
@@ -375,7 +375,7 @@ func TestOpenAPI_SimpleObject(t *testing.T) {
 		t.Fatalf("Error in makeAPI() %q", err)
 	}
 
-	checkMessage(t, *test.Messages[0], api.Message{
+	checkMessage(t, test.Messages[0], &api.Message{
 		Name:          "Fake",
 		ID:            "..Fake",
 		Documentation: "A test message.",
@@ -422,7 +422,7 @@ func TestOpenAPI_Any(t *testing.T) {
 		t.Errorf("Error in makeAPI() %q", err)
 	}
 
-	checkMessage(t, *test.Messages[0], api.Message{
+	checkMessage(t, test.Messages[0], &api.Message{
 		Name:          "Fake",
 		ID:            "..Fake",
 		Documentation: "A test message.",
@@ -455,7 +455,7 @@ func TestOpenAPI_MapString(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	checkMessage(t, *test.Messages[0], api.Message{
+	checkMessage(t, test.Messages[0], &api.Message{
 		Name:          "Fake",
 		ID:            "..Fake",
 		Documentation: "A test message.",
@@ -504,7 +504,7 @@ func TestOpenAPI_MapInteger(t *testing.T) {
 		t.Errorf("Error in makeAPI() %q", err)
 	}
 
-	checkMessage(t, *test.Messages[0], api.Message{
+	checkMessage(t, test.Messages[0], &api.Message{
 		Name:          "Fake",
 		ID:            "..Fake",
 		Documentation: "A test message.",
@@ -606,8 +606,10 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 				Name:          "locations",
 				JSONName:      "locations",
 				Documentation: "A list of locations that matches the specified filter in the request.",
-				Typez:         api.MESSAGE_TYPE,
+				Name:          "locations",
+				Typez:         11,
 				TypezID:       "..Location",
+				JSONName:      "locations",
 				Repeated:      true,
 			},
 			{
@@ -637,7 +639,7 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 		t.Errorf("missing message (ListLocationsRequest) in MessageByID index")
 		return
 	}
-	checkMessage(t, *listLocationsRequest, api.Message{
+	checkMessage(t, listLocationsRequest, &api.Message{
 		Name:          "ListLocationsRequest",
 		ID:            "..ListLocationsRequest",
 		Documentation: "The request message for ListLocations.",
@@ -689,7 +691,7 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 		t.Errorf("missing message (SecretPayload) in MessageByID index")
 		return
 	}
-	checkMessage(t, *secretPayload, api.Message{
+	checkMessage(t, secretPayload, &api.Message{
 		Name:          "SecretPayload",
 		ID:            "..SecretPayload",
 		Documentation: "A secret payload resource in the Secret Manager API. This contains the\nsensitive secret payload that is associated with a SecretVersion.",
@@ -804,28 +806,12 @@ func TestOpenAPI_MakeApiWithServiceConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	serviceConfig := &serviceconfig.Service{
-		Name:  "secretmanager.googleapis.com",
-		Title: "Secret Manager API",
-		Apis: []*apipb.Api{
-			{
-				Name: "google.cloud.location.Locations",
-			},
-			{
-				Name: "google.cloud.secretmanager.v1.SecretManagerService",
-			},
-		},
-	}
-	got, err := makeAPIForOpenAPI(serviceConfig, model)
+	got, err := makeAPIForOpenAPI(sample.ServiceConfig(), model)
 	if err != nil {
 		t.Fatalf("Error in makeAPI() %q", err)
 	}
-	want := &api.API{
-		Name:        "secretmanager",
-		Title:       "Secret Manager API",
-		Description: "Stores sensitive data such as API keys, passwords, and certificates. Provides convenience while improving security.",
-	}
-
+	want := sample.API()
+	want.PackageName = ""
 	if diff := cmp.Diff(got, want, cmpopts.IgnoreFields(api.API{}, "Services", "Messages", "Enums", "State")); diff != "" {
 		t.Errorf("mismatched API attributes (-want, +got):\n%s", diff)
 	}
@@ -841,31 +827,15 @@ func TestOpenAPI_MakeApiServiceConfigOverridesDescription(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	serviceConfig := &serviceconfig.Service{
-		Name:  "secretmanager.googleapis.com",
-		Title: "Secret Manager API",
-		Apis: []*apipb.Api{
-			{
-				Name: "google.cloud.location.Locations",
-			},
-			{
-				Name: "google.cloud.secretmanager.v1.SecretManagerService",
-			},
-		},
-		Documentation: &serviceconfig.Documentation{
-			Summary: "Test Only - Override Description.",
-		},
-	}
+	serviceConfig := sample.ServiceConfig()
+	serviceConfig.Documentation.Summary = "Test Only - Override Description."
+	want := sample.API()
+	want.PackageName = ""
+	want.Description = serviceConfig.Documentation.Summary
 	got, err := makeAPIForOpenAPI(serviceConfig, model)
 	if err != nil {
 		t.Fatalf("Error in makeAPI() %q", err)
 	}
-	want := &api.API{
-		Name:        "secretmanager",
-		Title:       "Secret Manager API",
-		Description: "Test Only - Override Description.",
-	}
-
 	if diff := cmp.Diff(got, want, cmpopts.IgnoreFields(api.API{}, "Services", "Messages", "Enums", "State")); diff != "" {
 		t.Errorf("mismatched API attributes (-want, +got):\n%s", diff)
 	}
@@ -893,7 +863,7 @@ func TestOpenAPI_SyntheticMessageWithExistingRequest(t *testing.T) {
 		t.Errorf("missing message (%s) in MessageByID index", id)
 		return
 	}
-	checkMessage(t, *setIamPolicyRequest, api.Message{
+	checkMessage(t, setIamPolicyRequest, &api.Message{
 		Name:          "SetIamPolicyRequest",
 		ID:            "..SetIamPolicyRequest",
 		Documentation: "Request message for `SetIamPolicy` method.",
@@ -989,7 +959,7 @@ func TestOpenAPI_Pagination(t *testing.T) {
 		t.Errorf("missing message (ListFoosResponse) in MessageByID index")
 		return
 	}
-	checkMessage(t, *resp, api.Message{
+	checkMessage(t, resp, &api.Message{
 		Name:               "ListFoosResponse",
 		ID:                 "..ListFoosResponse",
 		IsPageableResponse: true,
