@@ -45,8 +45,9 @@ const (
 type API struct {
 	// Name of the API (e.g. secretmanager).
 	Name string
-	// Name of the package name in the source specification format. For Protobuf
-	// this may be `google.cloud.secretmanager.v1`.
+	// Name of the package name in the source specification format. For
+	// Protobuf this may be `google.cloud.secretmanager.v1`. For OpenAPI this
+	// is empty.
 	PackageName string
 	// The API Title (e.g. "Secret Manager API" or "Cloud Spanner API").
 	Title string

@@ -64,26 +64,13 @@ func TestOpenAPI_AllOf(t *testing.T) {
 	}
 
 	want := sample.Automatic()
+	want.Package = ""
 	message := test.State.MessageByID[want.ID]
 	if message == nil {
 		t.Errorf("missing message in MessageByID index")
 		return
 	}
-	checkMessage(t, *message, api.Message{
-		Name:          "Automatic",
-		ID:            "..Automatic",
-		Documentation: "A replication policy that replicates the Secret payload without any restrictions.",
-		Fields: []*api.Field{
-			{
-				Name:          "customerManagedEncryption",
-				JSONName:      "customerManagedEncryption",
-				Documentation: "Optional. The customer-managed encryption configuration of the Secret.",
-				Typez:         api.MESSAGE_TYPE,
-				TypezID:       "..CustomerManagedEncryption",
-				Optional:      true,
-			},
-		},
-	})
+	checkMessage(t, message, want)
 }
 
 func TestOpenAPI_BasicTypes(t *testing.T) {
@@ -544,7 +531,7 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 		t.Errorf("missing message (Location) in MessageByID index")
 		return
 	}
-	checkMessage(t, *location, api.Message{
+	checkMessage(t, location, &api.Message{
 		Documentation: "A resource that represents a Google Cloud location.",
 		Name:          "Location",
 		ID:            "..Location",
@@ -597,7 +584,7 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 		t.Errorf("missing message (ListLocationsResponse) in MessageByID index")
 		return
 	}
-	checkMessage(t, *listLocationsResponse, api.Message{
+	checkMessage(t, listLocationsResponse, &api.Message{
 		Documentation: "The response message for Locations.ListLocations.",
 		Name:          "ListLocationsResponse",
 		ID:            "..ListLocationsResponse",
@@ -606,10 +593,8 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 				Name:          "locations",
 				JSONName:      "locations",
 				Documentation: "A list of locations that matches the specified filter in the request.",
-				Name:          "locations",
 				Typez:         11,
 				TypezID:       "..Location",
-				JSONName:      "locations",
 				Repeated:      true,
 			},
 			{
@@ -686,34 +671,13 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 	})
 
 	// This message has a weirdly named field that gets tricky to serialize.
-	secretPayload, ok := test.State.MessageByID["..SecretPayload"]
+	sp := sample.SecretPayload()
+	got, ok := test.State.MessageByID[sp.ID]
 	if !ok {
 		t.Errorf("missing message (SecretPayload) in MessageByID index")
 		return
 	}
-	checkMessage(t, secretPayload, &api.Message{
-		Name:          "SecretPayload",
-		ID:            "..SecretPayload",
-		Documentation: "A secret payload resource in the Secret Manager API. This contains the\nsensitive secret payload that is associated with a SecretVersion.",
-		Fields: []*api.Field{
-			{
-				Name:          "data",
-				JSONName:      "data",
-				Documentation: "The secret data. Must be no larger than 64KiB.",
-				Typez:         api.BYTES_TYPE,
-				TypezID:       "bytes",
-				Optional:      true,
-			},
-			{
-				Name:          "dataCrc32c",
-				JSONName:      "dataCrc32c",
-				Documentation: "Optional. If specified, SecretManagerService will verify the integrity of the\nreceived data on SecretManagerService.AddSecretVersion calls using\nthe crc32c checksum and store it to include in future\nSecretManagerService.AccessSecretVersion responses. If a checksum is\nnot provided in the SecretManagerService.AddSecretVersion request, the\nSecretManagerService will generate and store one for you.\n\nThe CRC32C value is encoded as a Int64 for compatibility, and can be\nsafely downconverted to uint32 in languages that support this type.\nhttps://cloud.google.com/apis/design/design_patterns#integer_types",
-				Typez:         api.INT64_TYPE,
-				TypezID:       "int64",
-				Optional:      true,
-			},
-		},
-	})
+	checkMessage(t, got, sp)
 
 	service, ok := test.State.ServiceByID["..Service"]
 	if !ok {
@@ -721,12 +685,10 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 		return
 	}
 
-	wantService := &api.Service{
-		Name:          "Service",
-		ID:            "..Service",
-		Documentation: "Stores sensitive data such as API keys, passwords, and certificates. Provides convenience while improving security.",
-		DefaultHost:   "secretmanager.googleapis.com",
-	}
+	wantService := sample.Service()
+	wantService.Package = ""
+	wantService.Name = "Service"
+	wantService.ID = "..Service"
 	if diff := cmp.Diff(wantService, service, cmpopts.IgnoreFields(api.Service{}, "Methods")); diff != "" {
 		t.Errorf("mismatched service attributes (-want, +got):\n%s", diff)
 	}
@@ -754,47 +716,17 @@ func TestOpenAPI_MakeAPI(t *testing.T) {
 		IsPageable: true,
 	})
 
-	checkMethod(t, service, "CreateSecret", &api.Method{
-		Name:          "CreateSecret",
-		ID:            "..Service.CreateSecret",
-		Documentation: "Creates a new Secret containing no SecretVersions.",
-		InputTypeID:   "..CreateSecretRequest",
-		OutputTypeID:  "..Secret",
-		PathInfo: &api.PathInfo{
-			Verb:          "POST",
-			BodyFieldPath: "requestBody",
-			PathTemplate: []api.PathSegment{
-				api.NewLiteralPathSegment("v1"),
-				api.NewLiteralPathSegment("projects"),
-				api.NewFieldPathPathSegment("project"),
-				api.NewLiteralPathSegment("secrets"),
-			},
-			QueryParameters: map[string]bool{
-				"secretId": true,
-			},
-		},
-	})
+	cs := sample.MethodCreate()
+	cs.PathInfo.PathTemplate = []api.PathSegment{
+		api.NewLiteralPathSegment("v1"),
+		api.NewLiteralPathSegment("projects"),
+		api.NewFieldPathPathSegment("project"),
+		api.NewLiteralPathSegment("secrets"),
+	}
+	checkMethod(t, service, cs.Name, cs)
 
-	checkMethod(t, service, "AddSecretVersion", &api.Method{
-		Name:          "AddSecretVersion",
-		ID:            "..Service.AddSecretVersion",
-		Documentation: "Creates a new SecretVersion containing secret data and attaches\nit to an existing Secret.",
-		InputTypeID:   "..AddSecretVersionRequest",
-		OutputTypeID:  "..SecretVersion",
-		PathInfo: &api.PathInfo{
-			Verb:          "POST",
-			BodyFieldPath: "*",
-			PathTemplate: []api.PathSegment{
-				api.NewLiteralPathSegment("v1"),
-				api.NewLiteralPathSegment("projects"),
-				api.NewFieldPathPathSegment("project"),
-				api.NewLiteralPathSegment("secrets"),
-				api.NewFieldPathPathSegment("secret"),
-				api.NewVerbPathSegment("addVersion"),
-			},
-			QueryParameters: map[string]bool{},
-		},
-	})
+	asv := sample.MethodAddSecretVersion()
+	checkMethod(t, service, asv.Name, asv)
 }
 
 func TestOpenAPI_MakeApiWithServiceConfig(t *testing.T) {

@@ -1190,7 +1190,7 @@ func rustValidate(api *api.API, sourceSpecificationPackageName string) error {
 			newPackage == "google.longrunning" {
 			return nil
 		}
-		return fmt.Errorf("rust codec requires all top-level elements to be in the same package want=%s, got=%s for %s",
+		return fmt.Errorf("rust codec requires all top-level elements to be in the same package want=%q, got=%q for %q",
 			sourceSpecificationPackageName, newPackage, elementName)
 	}
 
@@ -1199,13 +1199,15 @@ func rustValidate(api *api.API, sourceSpecificationPackageName string) error {
 			return err
 		}
 	}
-	for _, s := range api.Messages {
-		if err := validatePkg(s.Package, s.ID); err != nil {
+	for _, m := range api.Messages {
+		fmt.Println(m.Name)
+		if err := validatePkg(m.Package, m.ID); err != nil {
 			return err
 		}
 	}
-	for _, s := range api.Enums {
-		if err := validatePkg(s.Package, s.ID); err != nil {
+	for _, e := range api.Enums {
+		fmt.Println(e.Name)
+		if err := validatePkg(e.Package, e.ID); err != nil {
 			return err
 		}
 	}
