@@ -53,43 +53,39 @@ var cmdSidekick = newCommand(
 		return nil
 	})
 
-// Run is the entry point for the sidekick logic. It expects args to be the command line arguments, minus the program name.
+// Run is the entry point for the sidekick logic. It expects args to be the
+// command line arguments, minus the program name.
 func Run(args []string) error {
 	if len(args) < 1 {
 		cmdSidekick.printUsage()
 		return fmt.Errorf("no command given")
 	}
+
 	if args[0] == "help" {
 		cmd, found, unusedArgs := cmdSidekick.lookup(args[1:])
 		if !found {
-			return newNotFoundError(
-				cmd,
-				args[1:],
-				unusedArgs,
+			return newNotFoundError(cmd, args[1:], unusedArgs,
 				fmt.Sprintf(
 					"Could not find help documentation for 'sidekick help %s'",
 					strings.Join(args[1:], " ")))
 		}
 		cmd.printUsage()
 		return nil
-	} else {
-		cmd, found, cmdArgs := cmdSidekick.lookup(args)
-		if !found {
-			return newNotFoundError(
-				cmd,
-				args,
-				cmdArgs,
-				fmt.Sprintf(
-					"Could not find command 'sidekick %s'",
-					strings.Join(args, " ")))
-		} else {
-			var err error
-			if cmdLine, err := cmd.parseCmdLine(cmdArgs); err == nil {
-				return runCommand(cmd, cmdLine)
-			}
-			return err
-		}
 	}
+
+	cmd, found, cmdArgs := cmdSidekick.lookup(args)
+	if !found {
+		return newNotFoundError(cmd, args, cmdArgs,
+			fmt.Sprintf(
+				"Could not find command 'sidekick %s'",
+				strings.Join(args, " ")))
+	}
+
+	cmdLine, err := cmd.parseCmdLine(cmdArgs)
+	if err != nil {
+		return err
+	}
+	return runCommand(cmd, cmdLine)
 }
 
 func newNotFoundError(bestMatch *command, allArgs []string, unusedArgs []string, msg string) error {
@@ -97,29 +93,29 @@ func newNotFoundError(bestMatch *command, allArgs []string, unusedArgs []string,
 	if bestMatch != cmdSidekick {
 		validHelp += " " + strings.Join(allArgs[0:len(allArgs)-len(unusedArgs)], " ")
 	}
-	return fmt.Errorf(
-		"%s. For help, run '%s'",
-		msg,
-		validHelp)
+	return fmt.Errorf("%s. For help, run '%s'", msg, validHelp)
 }
 
-func runCommand(cmd *command, cmdLine *CommandLine) error {
+func runCommand(cmd *command, cmdLine *CommandLine) (err error) {
 	if cmdLine.ProjectRoot != "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("could not get current working directory: %w", err)
 		}
-		defer func(dir string) {
-			_ = os.Chdir(dir)
-		}(cwd)
+		defer func() {
+			cerr := os.Chdir(cwd)
+			if err == nil {
+				err = cerr
+			}
+		}()
 		if err = os.Chdir(cmdLine.ProjectRoot); err != nil {
 			return fmt.Errorf("could not change to project root [%s]: %w", cmdLine.ProjectRoot, err)
 		}
 	}
+
 	config, err := config.LoadConfig(cmdLine.Language, cmdLine.Source, cmdLine.Codec)
 	if err != nil {
 		return fmt.Errorf("could not load configuration: %w", err)
 	}
-
 	return cmd.run(config, cmdLine)
 }
