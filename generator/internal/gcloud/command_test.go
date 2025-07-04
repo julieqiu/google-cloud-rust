@@ -58,15 +58,12 @@ func TestCommandYAML(t *testing.T) {
 				t.Fatalf("failed to unmarshal YAML: %v", err)
 			}
 			var got bytes.Buffer
-			enc := yaml.NewEncoder(&got)
-			enc.SetIndent(2)
-			if err := enc.Encode(commands); err != nil {
+			if err := write(&got, commands); err != nil {
 				t.Fatalf("failed to marshal struct to YAML: %v", err)
 			}
 
-			lines := strings.Split(string(data), "\n")
-
 			// Skip all leading comments and blank lines
+			lines := strings.Split(string(data), "\n")
 			var index int
 			for i, line := range lines {
 				trimmed := strings.TrimSpace(line)
@@ -78,7 +75,6 @@ func TestCommandYAML(t *testing.T) {
 			}
 
 			want := strings.Join(lines[index:], "\n")
-
 			if diff := cmp.Diff(want, got.String()); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
