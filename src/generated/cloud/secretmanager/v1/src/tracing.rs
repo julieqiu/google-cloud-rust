@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,25 +18,19 @@ use crate::Result;
 /// Implements a [SecretManagerService](super::stub::SecretManagerService) decorator for logging and tracing.
 #[derive(Clone, Debug)]
 pub struct SecretManagerService<T>
-where
-    T: super::stub::SecretManagerService + std::fmt::Debug + Send + Sync,
-{
+where T: super::stub::SecretManagerService + std::fmt::Debug + Send + Sync {
     inner: T,
 }
 
 impl<T> SecretManagerService<T>
-where
-    T: super::stub::SecretManagerService + std::fmt::Debug + Send + Sync,
-{
+where T: super::stub::SecretManagerService + std::fmt::Debug + Send + Sync {
     pub fn new(inner: T) -> Self {
         Self { inner }
     }
 }
 
 impl<T> super::stub::SecretManagerService for SecretManagerService<T>
-where
-    T: super::stub::SecretManagerService + std::fmt::Debug + Send + Sync,
-{
+where T: super::stub::SecretManagerService + std::fmt::Debug + Send + Sync {
     #[tracing::instrument(ret)]
     async fn list_secrets(
         &self,
@@ -172,21 +166,5 @@ where
         self.inner.test_iam_permissions(req, options).await
     }
 
-    #[tracing::instrument(ret)]
-    async fn list_locations(
-        &self,
-        req: location::model::ListLocationsRequest,
-        options: gax::options::RequestOptions,
-    ) -> Result<gax::response::Response<location::model::ListLocationsResponse>> {
-        self.inner.list_locations(req, options).await
-    }
-
-    #[tracing::instrument(ret)]
-    async fn get_location(
-        &self,
-        req: location::model::GetLocationRequest,
-        options: gax::options::RequestOptions,
-    ) -> Result<gax::response::Response<location::model::Location>> {
-        self.inner.get_location(req, options).await
-    }
 }
+

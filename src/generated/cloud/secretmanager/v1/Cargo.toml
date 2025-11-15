@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 [package]
 name                   = "google-cloud-secretmanager-v1"
 version                = "0.4.3"
-description            = "Google Cloud Client Libraries for Rust - Secret Manager API"
-edition.workspace      = true
+description            = "Google Cloud Client Libraries for Rust - "
+library.workspace      = true
 authors.workspace      = true
 license.workspace      = true
 repository.workspace   = true
@@ -33,7 +33,6 @@ gax.workspace        = true
 gaxi                 = { workspace = true, features = ["_internal-http-client"] }
 iam_v1.workspace     = true
 lazy_static.workspace = true
-location.workspace   = true
 reqwest.workspace    = true
 serde.workspace      = true
 serde_json.workspace = true

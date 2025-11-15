@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,11 @@
 # limitations under the License.
 
 [general]
+language = 'rust'
 specification-source = 'google/cloud/secretmanager/v1'
-service-config = 'google/cloud/secretmanager/v1/secretmanager_v1.yaml'
+
+[source]
+googleapis-root = '/var/folders/9g/cp4rsnl50rn71fwr4__sss1800kwvw/T/googleapis-3573158312/googleapis-9fcfbea0aa5b50fa22e190faceb073d74504172b'
 
 [codec]
-copyright-year = '2024'
+copyright-year = '2025'

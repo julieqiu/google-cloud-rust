@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -107,17 +107,6 @@ pub trait SecretManagerService: std::fmt::Debug + Send + Sync {
         options: gax::options::RequestOptions,
     ) -> crate::Result<gax::response::Response<iam_v1::model::TestIamPermissionsResponse>>;
 
-    async fn list_locations(
-        &self,
-        req: location::model::ListLocationsRequest,
-        options: gax::options::RequestOptions,
-    ) -> crate::Result<gax::response::Response<location::model::ListLocationsResponse>>;
-
-    async fn get_location(
-        &self,
-        req: location::model::GetLocationRequest,
-        options: gax::options::RequestOptions,
-    ) -> crate::Result<gax::response::Response<location::model::Location>>;
 }
 
 /// All implementations of [super::SecretManagerService] also implement [SecretManagerService].
@@ -258,21 +247,4 @@ impl<T: super::SecretManagerService> SecretManagerService for T {
         T::test_iam_permissions(self, req, options).await
     }
 
-    /// Forwards the call to the implementation provided by `T`.
-    async fn list_locations(
-        &self,
-        req: location::model::ListLocationsRequest,
-        options: gax::options::RequestOptions,
-    ) -> crate::Result<gax::response::Response<location::model::ListLocationsResponse>> {
-        T::list_locations(self, req, options).await
-    }
-
-    /// Forwards the call to the implementation provided by `T`.
-    async fn get_location(
-        &self,
-        req: location::model::GetLocationRequest,
-        options: gax::options::RequestOptions,
-    ) -> crate::Result<gax::response::Response<location::model::Location>> {
-        T::get_location(self, req, options).await
-    }
 }
